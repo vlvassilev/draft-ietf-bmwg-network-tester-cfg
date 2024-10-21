@@ -1,0 +1,7 @@
+Extract YANG modules:
+
+rfcstrip draft-ietf-bmwg-network-tester-cfg-04.xml
+
+XML to HTML or TXT:
+
+xml2rfc draft-ietf-bmwg-network-tester-cfg-04.xml -b draft-ietf-bmwg-network-tester-cfg-04 --text --html
