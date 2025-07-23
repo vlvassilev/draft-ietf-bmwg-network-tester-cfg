@@ -9,9 +9,9 @@
 <?rfc iprnotified="no"?>
 <?rfc strict="yes"?>
 <rfc ipr="trust200902"   category="std"
-     docName="draft-ietf-bmwg-network-tester-cfg-05" >
+     docName="draft-ietf-bmwg-network-tester-cfg-06" >
     <front>
-    <title abbrev="NETWORK-TESTER-MANAGEMENT-05">A YANG Data Model for Network Tester Management</title>
+    <title abbrev="NETWORK-TESTER-MANAGEMENT-06">A YANG Data Model for Network Tester Management</title>
     <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
       <organization>Lightside Instruments AS</organization>
       <address>
@@ -117,12 +117,12 @@ Generator module (TG), 2) Traffic Analyzer module (TA). The modules are
 implemented as augmentations of the ietf-interfaces <xref target="RFC8343"/>
 module adding configuration and state data that models the
 functionality of a network interconnect tester.  The TA and TG modules concept is
-illustrated with the following diagram of a tester with two interfaces (named e0 and e1) connected in a loop with single DUT:
+illustrated with the following diagram of a tester with two interfaces (named eth0 and eth1) connected in a loop with single DUT:
 
         <figure>
             <artwork><![CDATA[
                  +----------------+
-       e0.egress |                | e1.ingress
+     eth0.egress |                | eth1.ingress
     +------------| TG  tester  TA |<-------------+
     |            |                |              |
     |            +----------------+              |
@@ -1069,11 +1069,11 @@ This should be taken into consideration when granting read access to the followi
     The following topology will be used for the examples in this section:
         <figure>
             <artwork><![CDATA[
-    +-------------+          +------------+         +------------+
-    |             | e0    e0 |            | e1   e0 |            |
-    | tester0   TG|>-------->|    dut0    |>------->|TA  tester1 |
-    |             |          |            |         |            |
-    +-------------+          +------------+         +------------+
+    +-------------+           +------------+           +------------+
+    |             | eth0 eth0 |            | eth1 eth0 |            |
+    | tester0   TG|>--------->|    dut0    |>--------->|TA  tester1 |
+    |             |           |            |           |            |
+    +-------------+           +------------+           +------------+
 
             ]]></artwork>
         </figure>
@@ -1089,15 +1089,15 @@ net=connect("topology.xml")
 
 # Configure DUTs and enable traffic-analyzers
 net.node("dut0").edit( \
-  "create /interfaces/interface[name='e0'] -- type=ethernetCsmacd")
+  "create /interfaces/interface[name='eth0'] -- type=ethernetCsmacd")
 net.node("dut0").edit(
-  "create /interfaces/interface[name='e1'] -- type=ethernetCsmacd")
+  "create /interfaces/interface[name='eth1'] -- type=ethernetCsmacd")
 net.node("dut0").edit(
-  "create /flows/flow[id='t0'] -- match/in-port=e0 "
-  "actions/action[order='0']/output-action/out-port=e1")
+  "create /flows/flow[id='t0'] -- match/in-port=eth0 "
+  "actions/action[order='0']/output-action/out-port=eth1")
 
 net.node("tester1").edit(
-  "create /interfaces/interface[name='e0']/traffic-analyzer")
+  "create /interfaces/interface[name='eth0']/traffic-analyzer")
 net.commit()
 
 #Get network state - before
@@ -1105,7 +1105,7 @@ before=net.get()
 
 # Start traffic
 net.node("tester0).edit(
-  "create /interfaces/interface[name='e0']/traffic-generator -- "
+  "create /interfaces/interface[name='eth0']/traffic-generator -- "
   "frame-size=64 interframe-gap=20")
 
 net.commit()
@@ -1113,7 +1113,7 @@ net.commit()
 time.sleep(60)
 
 # Stop traffic
-net.node("tester1").edit("delete /interfaces/interface[name='e0']/"
+net.node("tester1").edit("delete /interfaces/interface[name='eth0']/"
                          "traffic-generator")
 net.commit()
 
@@ -1122,13 +1122,13 @@ after=net.get()
 
 #Report
 sent_pkts=delta("tester0",before,after,
-  "/interfaces/interface[name='e0']/statistics/out-unicast-pkts")
+  "/interfaces/interface[name='eth0']/statistics/out-unicast-pkts")
 
 received_pkts=delta("tester1",before,after,
-  "/interfaces/interface[name='e0']/statistics/in-unicast-pkts")
+  "/interfaces/interface[name='eth0']/statistics/in-unicast-pkts")
 
 latency_max=absolute(after,
-  "/interfaces/interface[name='e0']/traffic-analyzer/state/"
+  "/interfaces/interface[name='eth0']/traffic-analyzer/state/"
   "testframe-stats/latency/max")
 
 #Cleanup
@@ -1148,7 +1148,7 @@ In sec. C.2.6.4 Test Frames a detailed format is specified. The frame-data leaf 
         <artwork><![CDATA[
 ...
 net.node("tester1").edit(
-  "merge /interfaces/interface[name='e0']/"
+  "merge /interfaces/interface[name='eth0']/"
   "traffic-generator -- frame-data="
   "6CA96F0000026CA96F00000108004500"
   "002ED4A500000A115816C0000201C000"
@@ -1168,7 +1168,7 @@ of the generated Ethernet frame will be incremented.
         <artwork><![CDATA[
 ...
 net.node("tester1").edit(
-  "merge /interfaces/interface[name='e0']/"
+  "merge /interfaces/interface[name='eth0']/"
   "traffic-generator/modifiers/modifier[id='0'] -- "
   "offset=6 mask=FFFF action=increment repetitions=1")
 ...
