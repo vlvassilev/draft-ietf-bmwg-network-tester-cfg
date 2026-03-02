@@ -1,0 +1,40 @@
+module: ietf-traffic-generator
+
+  augment /if:interfaces/if:interface:
+    +--rw traffic-generator!
+       +--rw (type)
+       |  +--:(single-stream)
+       |  |  +--rw testframe-type?     identityref
+       |  |  +--rw frame-size          uint32
+       |  |  +--rw frame-data?         binary
+       |  |  +--rw interframe-gap      uint32
+       |  |  +--rw interburst-gap?     uint32
+       |  |  +--rw frames-per-burst?   uint32
+       |  |  +--rw modifiers
+       |  |     +--rw modifier* [id]
+       |  |        +--rw id             uint32
+       |  |        +--rw action         identityref
+       |  |        +--rw offset         uint32
+       |  |        +--rw mask           binary
+       |  |        +--rw repetitions    uint32
+       |  +--:(multi-stream)
+       |     +--rw streams
+       |        +--rw stream* [id]
+       |           +--rw id                   uint32
+       |           +--rw testframe-type?      identityref
+       |           +--rw frame-size           uint32
+       |           +--rw frame-data?          binary
+       |           +--rw interframe-gap       uint32
+       |           +--rw interburst-gap?      uint32
+       |           +--rw frames-per-burst?    uint32
+       |           +--rw frames-per-stream    uint32
+       |           +--rw interstream-gap      uint32
+       |           +--rw modifiers
+       |              +--rw modifier* [id]
+       |                 +--rw id             uint32
+       |                 +--rw action         identityref
+       |                 +--rw offset         uint32
+       |                 +--rw mask           binary
+       |                 +--rw repetitions    uint32
+       +--rw realtime-epoch?           yang:date-and-time {realtime-epoch}?
+       +--rw total-frames?             uint64

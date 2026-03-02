@@ -1,0 +1,45 @@
+module: ietf-traffic-analyzer
+
+  augment /if:interfaces/if:interface:
+    +--rw traffic-analyzer!
+       +--rw testframe-filter! {testframe-filter}?
+       |  +--rw type      identityref
+       |  +--rw mask?     binary
+       |  +--rw data?     binary
+       |  +--rw offset    uint32
+       +--rw capture! {capture}?
+       |  +--rw start-trigger!
+       |  |  +--rw (start-trigger)
+       |  |     +--:(frame-index)
+       |  |     |  +--rw frame-index?       uint64
+       |  |     +--:(testframe-index)
+       |  |        +--rw testframe-index?   uint64
+       |  +--rw stop-trigger!
+       |     +--rw (stop-trigger)
+       |        +--:(when-full)
+       |           +--rw when-full?   empty
+       +--ro state
+          +--ro pkts?              yang:counter64
+          +--ro octets?            yang:counter64
+          +--ro idle-octets?       yang:counter64 {idle-octets-counter}?
+          +--ro errors?            yang:counter64
+          +--ro testframe-stats
+          |  +--ro pkts?                  yang:counter64
+          |  +--ro sequence-errors?       yang:counter64
+          |  +--ro payload-errors?        yang:counter64
+          |  +--ro latency
+          |  |  +--ro samples?   uint64
+          |  |  +--ro min?       uint64
+          |  |  +--ro max?       uint64
+          |  |  +--ro average?   uint64
+          |  |  +--ro latest?    uint64
+          |  +--ro last-sequence-error
+          |     +--ro timestamp?   yang:date-and-time
+          |     +--ro expected?    uint64
+          |     +--ro received?    uint64
+          +--ro capture {capture}?
+             +--ro frame* [sequence-number]
+                +--ro sequence-number    uint64
+                +--ro timestamp?         yang:date-and-time
+                +--ro length?            uint32
+                +--ro data?              binary
