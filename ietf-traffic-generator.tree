@@ -37,4 +37,5 @@ module: ietf-traffic-generator
        |                 +--rw mask           binary
        |                 +--rw repetitions    uint32
        +--rw realtime-epoch?           yang:date-and-time {realtime-epoch}?
+       +--rw start-delay?              uint64
        +--rw total-frames?             uint64

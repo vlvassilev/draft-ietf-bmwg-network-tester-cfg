@@ -9,9 +9,9 @@
 <?rfc iprnotified="no"?>
 <?rfc strict="yes"?>
 <rfc ipr="trust200902"   category="std"
-     docName="draft-ietf-bmwg-network-tester-cfg-08" >
+     docName="draft-ietf-bmwg-network-tester-cfg-09" >
     <front>
-    <title abbrev="NETWORK-TESTER-MANAGEMENT-08">A YANG Data Model for Network Tester Management</title>
+    <title abbrev="NETWORK-TESTER-MANAGEMENT-09">A YANG Data Model for Network Tester Management</title>
     <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
       <organization>Lightside Instruments AS</organization>
       <address>
@@ -189,6 +189,7 @@ module: ietf-traffic-generator
        |                 +--rw repetitions    uint32
        +--rw realtime-epoch?
        |        yang:date-and-time {realtime-epoch}?
+       +--rw start-delay?              uint64
        +--rw total-frames?             uint64
 ]]></artwork>
         </figure>
@@ -245,7 +246,7 @@ module: ietf-traffic-analyzer
         </figure>
 </section>
 <section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
-<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2025-11-25.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-03-19.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-generator {
@@ -289,7 +290,7 @@ module ietf-traffic-generator {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2025-11-25 {
+  revision 2026-03-19 {
     description
       "Initial revision.";
     reference
@@ -369,6 +370,13 @@ module ietf-traffic-generator {
       description
         "If this leaf is present the stream generation will start
          at the specified realtime epoch.";
+    }
+    leaf start-delay {
+      type uint64;
+      units "octets";
+      description
+        "If this leaf is present the traffic generation will start
+         after the specified number of idle octets have elapsed.";
     }
     leaf total-frames {
       type uint64;
@@ -582,7 +590,7 @@ module ietf-traffic-generator {
 </section>
 
 <section title="Traffic Analyzer Module YANG" anchor="traffic-analyzer-module">
-<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2025-11-25.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-03-19.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-analyzer {
@@ -626,7 +634,7 @@ module ietf-traffic-analyzer {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2025-11-25 {
+  revision 2026-03-19 {
     description
       "Initial revision.";
     reference
@@ -1162,9 +1170,9 @@ In sec. C.2.6.4 Test Frames a detailed format is specified. The frame-data leaf 
 net.node("tester1").edit(
   "merge /interfaces/interface[name='eth0']/"
   "traffic-generator -- frame-data="
-  "6c:a9:6f:00:00:02:6c:a9:6f:00:00:01:08:00:45:00"
-  "00:2e:d4:a5:00:00:0a:11:58:16:c0:00:02:01:C0:00"
-  "02:02:c0:20:00:07:00:1a:00:00:01:02:03:04:05:06"
+  "6c:a9:6f:00:00:02:6c:a9:6f:00:00:01:08:00:45:00:"
+  "00:2e:d4:a5:00:00:0a:11:58:16:c0:00:02:01:C0:00:"
+  "02:02:c0:20:00:07:00:1a:00:00:01:02:03:04:05:06:"
   "07:08:09:0a:0b:0c:0d:0e:0f:10:11:12")
 ...
             ]]></artwork>
@@ -1188,5 +1196,40 @@ net.node("tester1").edit(
         </figure>
     </t>
 </section>
+<section title="Example: NETCONF &lt;get&#8209;config&gt; Reply" anchor="example-netconf-get-config-reply">
+    <t>
+This section gives an example of a reply to the NETCONF &lt;get&#8209;config&gt;
+request for &lt;running&gt; for a device that implements the example data
+models above.
+    </t>
+	<figure>
+	    <artwork><![CDATA[
+<rpc-reply
+    xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"
+    message-id="101">
+  <data>
+    <interfaces
+        xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces"
+        xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type"
+        xmlns:tg="urn:ietf:params:xml:ns:yang:ietf-traffic-generator">
+      <interface>
+        <name>eth0</name>
+        <type>ianaift:ethernetCsmacd</type>
+        <tg:traffic-generator>
+          <frame-size>64</frame-size>
+          <frame-data>
+              bKlvAAACbKlvAAABCABFAAAu1KUAAAoRWBbAAAIB
+              wAACAsAgAAcAGgAAAQIDBAUGBwgJCgsMDQ4PEBES
+          </frame-data>
+          <interframe-gap>20</interframe-gap>
+        </tg:traffic-generator>
+      </interface>
+    </interfaces>
+  </data>
+</rpc-reply>
+	    ]]></artwork>
+	</figure>
+</section>
+
 </section>
 </back></rfc>
