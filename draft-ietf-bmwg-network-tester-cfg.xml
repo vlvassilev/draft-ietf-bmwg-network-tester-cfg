@@ -9,9 +9,9 @@
 <?rfc iprnotified="no"?>
 <?rfc strict="yes"?>
 <rfc ipr="trust200902"   category="std"
-     docName="draft-ietf-bmwg-network-tester-cfg-09" >
+     docName="draft-ietf-bmwg-network-tester-cfg-10" >
     <front>
-    <title abbrev="NETWORK-TESTER-MANAGEMENT-09">A YANG Data Model for Network Tester Management</title>
+    <title abbrev="NETWORK-TESTER-MANAGEMENT-10">A YANG Data Model for Network Tester Management</title>
     <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
       <organization>Lightside Instruments AS</organization>
       <address>
@@ -32,7 +32,7 @@ There is a need for standard mechanism to allow the specification
 and implementation of the transactions part of network tests.
 The mechanism should allow the control and monitoring of the data plane traffic in a transactional way.
 
-This document defines two YANG modules for test traffic generator and analyzer.
+This document defines two <xref target="RFC7950">YANG</xref> modules for test traffic generator and analyzer.
     </t>
     <t>
 The YANG modules in this document conform to the Network Management Datastore Architecture (NMDA) defined in RFC 8342.
@@ -246,7 +246,7 @@ module: ietf-traffic-analyzer
         </figure>
 </section>
 <section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
-<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-03-19.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-04-07.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-generator {
@@ -262,7 +262,7 @@ module ietf-traffic-generator {
   import ietf-yang-types {
     prefix yang;
     reference
-      "RFC 6991: Common YANG Data Types";
+      "RFC 9911: Common YANG Data Types";
   }
 
   organization
@@ -290,7 +290,7 @@ module ietf-traffic-generator {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-03-19 {
+  revision 2026-04-07 {
     description
       "Initial revision.";
     reference
@@ -590,7 +590,7 @@ module ietf-traffic-generator {
 </section>
 
 <section title="Traffic Analyzer Module YANG" anchor="traffic-analyzer-module">
-<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-03-19.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-04-07.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-analyzer {
@@ -606,7 +606,7 @@ module ietf-traffic-analyzer {
   import ietf-yang-types {
     prefix yang;
     reference
-      "RFC 6991: Common YANG Data Types";
+      "RFC 9911: Common YANG Data Types";
   }
 
   organization
@@ -634,7 +634,7 @@ module ietf-traffic-analyzer {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-03-19 {
+  revision 2026-04-07 {
     description
       "Initial revision.";
     reference
@@ -1013,7 +1013,7 @@ reference: RFC XXXX
           lowest NETCONF layer is the secure transport layer and the mandatory
           to implement secure transport is SSH <xref target="RFC6242">RFC
           6242</xref>.  The NETCONF access control model <xref
-          target="RFC6536">RFC 6536</xref> provides the means to restrict access
+          target="RFC8341">RFC 8341</xref> provides the means to restrict access
           for particular NETCONF users to a pre-configured subset of all
           available NETCONF protocol operations and content.</t>
           <t>There are a number of data nodes defined in this YANG module which
@@ -1050,8 +1050,8 @@ This should be taken into consideration when granting read access to the followi
       <?rfc include='reference.RFC.6020'?>
       <?rfc include='reference.RFC.6241'?>
       <?rfc include='reference.RFC.6242'?>
-      <?rfc include='reference.RFC.6536'?>
-      <?rfc include='reference.RFC.6991'?>
+      <?rfc include='reference.RFC.8341'?>
+      <?rfc include='reference.RFC.9911'?>
       <?rfc include='reference.RFC.7224'?>
       <?rfc include='reference.RFC.7950'?>
       <?rfc include='reference.RFC.8343'?>
@@ -1202,8 +1202,8 @@ This section gives an example of a reply to the NETCONF &lt;get&#8209;config&gt;
 request for &lt;running&gt; for a device that implements the example data
 models above.
     </t>
-	<figure>
-	    <artwork><![CDATA[
+        <figure>
+            <artwork><![CDATA[
 <rpc-reply
     xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"
     message-id="101">
@@ -1211,24 +1211,24 @@ models above.
     <interfaces
         xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces"
         xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type"
-        xmlns:tg="urn:ietf:params:xml:ns:yang:ietf-traffic-generator">
+        xmlns:nttg="urn:ietf:params:xml:ns:yang:ietf-traffic-generator">
       <interface>
         <name>eth0</name>
         <type>ianaift:ethernetCsmacd</type>
-        <tg:traffic-generator>
+        <nttg:traffic-generator>
           <frame-size>64</frame-size>
           <frame-data>
               bKlvAAACbKlvAAABCABFAAAu1KUAAAoRWBbAAAIB
               wAACAsAgAAcAGgAAAQIDBAUGBwgJCgsMDQ4PEBES
           </frame-data>
           <interframe-gap>20</interframe-gap>
-        </tg:traffic-generator>
+        </nttg:traffic-generator>
       </interface>
     </interfaces>
   </data>
 </rpc-reply>
-	    ]]></artwork>
-	</figure>
+            ]]></artwork>
+        </figure>
 </section>
 
 </section>
