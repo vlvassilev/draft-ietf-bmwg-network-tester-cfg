@@ -6,7 +6,7 @@ module ietf-traffic-analyzer {
   import ietf-interfaces {
     prefix if;
     reference
-      "RFC 8343: A YANG Data Model For Interface Management";
+      "RFC 8343: A YANG Data Model for Interface Management";
   }
   import ietf-yang-types {
     prefix yang;
@@ -18,15 +18,16 @@ module ietf-traffic-analyzer {
     "IETF Benchmarking Methodology Working Group";
   contact
     "WG Web:   <http://tools.ietf.org/wg/bmwg/>
-     WG List:  <mailto:bmwg@ietf.org>
+     WG List:  BMWG <mailto:bmwg@ietf.org>
 
-     Editor:   Vladimir Vassilev
+     Author:   Vladimir Vassilev
                <mailto:vladimir@lightside-instruments.com>";
   description
     "This module contains a collection of YANG definitions for
-     description and management of network interconnect testers.
+     management of the traffic analyzer functionality part
+     of network interconnect testers.
 
-     Copyright (c) 2024 IETF Trust and the persons identified as
+     Copyright (c) 2026 IETF Trust and the persons identified as
      authors of the code.  All rights reserved.
 
      Redistribution and use in source and binary forms, with or
@@ -36,27 +37,31 @@ module ietf-traffic-analyzer {
      Relating to IETF Documents
      (https://trustee.ietf.org/license-info).
 
+     All revisions of IETF and IANA published modules can be found
+     at the YANG Parameters registry group
+     (https://www.iana.org/assignments/yang-parameters).
+
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-04-07 {
+  revision 2026-05-28 {
     description
       "Initial revision.";
     reference
       "RFC XXXX: A YANG Data Model for
-       Network Tester Management";
+                 Network Tester Management";
   }
 
   feature testframe-filter {
     description
-      "This feature indicates that the device implements
-       filter that can specify a subset of packets to be
+      "Indicates that the device implements
+       a filter that can specify a subset of packets to be
        analyzed as testframes.";
   }
 
   feature idle-octets-counter {
     description
-      "This feature indicates that the device implements
+      "Indicates that the device implements
        idle-octets counter that accumulates the time
        the link is not utilized. The minimum required
        idle gaps are not counted as idle octets.";
@@ -64,7 +69,7 @@ module ietf-traffic-analyzer {
 
   feature capture {
     description
-      "This feature indicates that the device implements
+      "Indicates that the device implements
        packet capture functionality.";
   }
 
@@ -79,7 +84,7 @@ module ietf-traffic-analyzer {
       "Bit field matching filter. Frames that do not have
        equal values for all the bits of the specified data
        at the offsets specified with bits set in the mask
-       are not processed as testframes.";
+       are not processed as test frames.";
   }
 
   grouping statistics-data {
@@ -103,9 +108,13 @@ module ietf-traffic-analyzer {
       description
         "Total accumulated period with no frame transmission
          taking place measured in octets at the current link
-         speed. Octets not counted in ../octets but not idle are
-         for example layer 1 framing octets - for Ethernet interfaces
-         7+1 preamble octets per packet.";
+         speed. This counter does not increment only when the
+         interface is operating at 100% of its capacity.
+
+         Octets not counted in '../octets' but not idle are,
+         for example, layer 1 framing octets - for Ethernet interfaces
+         7+1 preamble octets per packet as well as the 12-octets
+         minimum gap.";
     }
     leaf errors {
       type yang:counter64;
@@ -146,7 +155,7 @@ module ietf-traffic-analyzer {
           description
             "Total count of testframes used for estimating
              the latency statistics. When every testframe is
-             used samples=../pkts.";
+             used, samples='../pkts'.";
         }
         leaf min {
           type uint64;

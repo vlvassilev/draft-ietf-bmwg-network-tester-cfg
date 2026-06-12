@@ -7,8 +7,8 @@ module: ietf-traffic-generator
        |  |  +--rw testframe-type?     identityref
        |  |  +--rw frame-size          uint32
        |  |  +--rw frame-data?         binary
-       |  |  +--rw interframe-gap      uint32
-       |  |  +--rw interburst-gap?     uint32
+       |  |  +--rw gap                 uint32
+       |  |  +--rw burst-gap?          uint32
        |  |  +--rw frames-per-burst?   uint32
        |  |  +--rw modifiers
        |  |     +--rw modifier* [id]
@@ -24,11 +24,11 @@ module: ietf-traffic-generator
        |           +--rw testframe-type?      identityref
        |           +--rw frame-size           uint32
        |           +--rw frame-data?          binary
-       |           +--rw interframe-gap       uint32
-       |           +--rw interburst-gap?      uint32
+       |           +--rw gap                  uint32
+       |           +--rw burst-gap?           uint32
        |           +--rw frames-per-burst?    uint32
        |           +--rw frames-per-stream    uint32
-       |           +--rw interstream-gap      uint32
+       |           +--rw stream-gap           uint32
        |           +--rw modifiers
        |              +--rw modifier* [id]
        |                 +--rw id             uint32
