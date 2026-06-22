@@ -36,12 +36,6 @@ Such a mechanism should allow the control and monitoring of the data plane traff
 
 This document defines a YANG <xref target="RFC7950"/> data model which is composed of two YANG modules for test traffic generator and analyzer functions.
     </t>
-
-<section title="Acronyms">
-  <t>DUT: Device Under Test</t>
-  <t>TA: Traffic Analyzer</t>
-  <t>TG: Traffic Generator</t>
-</section>
 <section anchor="problem" title="Problem Statement">
     <t>
 Network interconnect tests require active network
@@ -83,7 +77,6 @@ standard protocols like Network Configuration Protocol
 (NETCONF) <xref target="RFC6241"/>.
 
     </t>
-</section>
 <section title="Objectives">
     <t>
 This section specifies the design objectives for the data model. It should:
@@ -102,7 +95,9 @@ This section specifies the design objectives for the data model. It should:
 </list>
     </t>
 </section>
-<section anchor="data_model_overview" title="Data Model Overview">
+</section>     
+<section anchor="data_model_overview" title="Data Model">
+<section anchor="overview" title="Overview">     
     <t>
 The data model splits the design into two YANG modules - (1) Traffic
 Generator module (TG) and (2) Traffic Analyzer module (TA). The modules are
@@ -143,7 +138,6 @@ and overwritten with dynamic data according to this
 specification. In addition a dynamic payload can fill
 the remaining available space in the frame.
     </t>
-</section>
 </section>
 <section title="Using the Network Interconnect Tester Data Model">
 <t>
@@ -267,6 +261,7 @@ module: ietf-traffic-analyzer
         </figure>
 </t>
 </section>
+</section>    
 <section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
 <t>
 This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
