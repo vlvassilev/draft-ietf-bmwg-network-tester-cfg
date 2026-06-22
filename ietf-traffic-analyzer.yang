@@ -13,6 +13,9 @@ module ietf-traffic-analyzer {
     reference
       "RFC 9911: Common YANG Data Types";
   }
+  import ietf-netconf-acm {
+    prefix nacm;
+  }
 
   organization
     "IETF Benchmarking Methodology Working Group";
@@ -44,7 +47,7 @@ module ietf-traffic-analyzer {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-05-28 {
+  revision 2026-06-22 {
     description
       "Initial revision.";
     reference
@@ -57,6 +60,13 @@ module ietf-traffic-analyzer {
       "Indicates that the device implements
        a filter that can specify a subset of packets to be
        analyzed as testframes.";
+  }
+
+  feature capture-filter {
+    description
+      "Indicates that the device implements
+       a filter that can specify a subset of packets to be
+       captured.";
   }
 
   feature idle-octets-counter {
@@ -73,9 +83,27 @@ module ietf-traffic-analyzer {
        packet capture functionality.";
   }
 
+  identity testframe-type {
+    description
+      "Base identity for all test frame types.";
+  }
+
+  identity unspecified {
+    base testframe-type;
+    description
+      "The configuration of the testframe
+       type of the traffic analyzer is done outside of
+       the data model specified configuration interface.";
+  }
+
   identity testframe-filter {
     description
       "Base testframe-filter identity.";
+  }
+
+  identity capture-filter {
+    description
+      "Base capture-filter identity.";
   }
 
   identity bit-field-match {
@@ -89,41 +117,45 @@ module ietf-traffic-analyzer {
 
   grouping statistics-data {
     description
-      "Analyzer statistics.";
-    leaf pkts {
-      type yang:counter64;
+      "Analyzed traffic statistics and test frame statistics.";
+    container statistics {
       description
-        "Total number of packets analyzed.";
-    }
-    leaf octets {
-      type yang:counter64;
-      description
-        "This counter is identical with the in-octets/out-octets
-         counters defined in RFC8343 except that it counts the
-         octets since the analyzer was created.";
-    }
-    leaf idle-octets {
-      if-feature "idle-octets-counter";
-      type yang:counter64;
-      description
-        "Total accumulated period with no frame transmission
-         taking place measured in octets at the current link
-         speed. This counter does not increment only when the
-         interface is operating at 100% of its capacity.
+        "A collection of interface-related statistics objects.
+         The counters in this container must be initialized
+         to zero when the traffic-analyzer container is created";
+      leaf pkts {
+        type yang:counter64;
+        description
+          "Total number of packets analyzed.";
+      }
+      leaf octets {
+        type yang:counter64;
+        description
+          "Total number of packet octets analyzed.";
+      }
+      leaf idle-octets {
+        if-feature "idle-octets-counter";
+        type yang:counter64;
+        description
+          "Total accumulated period with no frame transmission
+           taking place measured in octets at the current link
+           speed. This counter does not increment only when the
+           interface is operating at 100% of its capacity.
 
-         Octets not counted in '../octets' but not idle are,
-         for example, layer 1 framing octets - for Ethernet interfaces
-         7+1 preamble octets per packet as well as the 12-octets
-         minimum gap.";
+           Octets not counted in '../octets' but not idle are,
+           for example, layer 1 framing octets - for Ethernet interfaces
+           7+1 preamble octets per packet as well as the 12-octets
+           minimum gap.";
+      }
+      leaf errors {
+        type yang:counter64;
+        description
+          "Count of packets with errors.
+           Not counted in the pkts or captured.
+           For example packets with CRC error.";
+      }
     }
-    leaf errors {
-      type yang:counter64;
-      description
-        "Count of packets with errors.
-         Not counted in the pkts or captured.
-         For example packets with CRC error.";
-    }
-    container testframe-stats {
+    container testframe-statistics {
       description
         "Statistics for received testframes containing
          either sequence number, payload checksum,
@@ -206,6 +238,27 @@ module ietf-traffic-analyzer {
     }
   }
 
+  grouping capture-statistics-data {
+    description
+      "Capture process statistics.";
+    container statistics {
+      description
+        "Statistics for captured frames.";
+      leaf pkts {
+        type yang:counter64;
+        description
+          "Total count of captured frames.";
+      }
+      leaf octets {
+        type yang:counter64;
+        description
+          "This counter is identical with the in-octets/out-octets
+           counters defined in RFC8343 except that it counts the
+           octets captured since the analyzer was created.";
+      }
+    }
+  }
+
   grouping capture-config-data {
     description
       "Grouping with a capture configuration container.";
@@ -214,6 +267,16 @@ module ietf-traffic-analyzer {
       presence "Enables the capture functionality";
       description
         "Contains capture parameters.";
+      leaf max-frames-visible {
+        type uint64;
+        description
+          "Maximum number of frame entries available in the state/capture/frames container.";
+      }
+      leaf max-frame-data-visible {
+        type uint32;
+        description
+          "Maximum length of data per frame available in the state/capture/frames/frame/data.";
+      }
       container start-trigger {
         presence "Enables trigger condition that starts
                   the capture process.";
@@ -266,6 +329,24 @@ module ietf-traffic-analyzer {
           }
         }
       }
+      container filter {
+        if-feature "capture-filter";
+        presence "When packets are filtered
+                  before captured according
+                  to the filter type";
+        description
+          "Contains the filtering rules for capturing only
+           a specific subset of the frames.";
+        leaf type {
+          type identityref {
+            base ntta:capture-filter;
+          }
+          mandatory true;
+          description
+            "Type of the applied filter. External modules can
+             define alternative filter type identities.";
+        }
+      }
     }
   }
 
@@ -276,59 +357,77 @@ module ietf-traffic-analyzer {
     container capture {
       if-feature "capture";
       description
-        "Statistics and data of
-         one or more captured frames.";
-      list frame {
-        key "sequence-number";
+        "Capture statistics data and frames.";
+      uses capture-statistics-data;
+      container frames {
         description
-          "Statistics and data of a captured frame.";
-        leaf sequence-number {
-          type uint64;
+          "Contains list of captured frames.";
+        list frame {
+          key "sequence-number";
           description
-            "Incremental counter of frames captured.";
-        }
-        leaf timestamp {
-          type yang:date-and-time;
-          description
-            "Timestamp of the moment the frame was captured.";
-        }
-        leaf length {
-          type uint32;
-          description
-            "Frame length. Ideally the data captured will be
-             of the same length but can be shorter
-             depending on implementation limitations.";
-        }
-        leaf data {
-          type binary;
-          description
-            "Raw data of the captured frame.";
+            "Statistics and data of a captured frame.";
+          leaf sequence-number {
+            type uint64;
+            description
+              "Incremental counter of frames captured.";
+          }
+          leaf timestamp {
+            type yang:date-and-time;
+            description
+              "Timestamp of the moment the frame was captured.";
+          }
+          leaf size {
+            type uint32;
+            description
+              "Frame length. Ideally the data captured will be
+               of the same length but can be shorter
+               depending on implementation limitations.";
+          }
+          leaf data {
+            type binary;
+            description
+              "Raw data of the captured frame.";
+            nacm:default-deny-all;
+          }
         }
       }
     }
   }
 
-  grouping filter-data {
+  grouping testframe-config-data {
     description
-      "Grouping with a filter container specifying the filtering
-       rules for processing only a specific subset of the
-       frames.";
-    container testframe-filter {
-      if-feature "testframe-filter";
-      presence "When present packets are
-                filtered before analyzed according
-                to the filter type";
+      "Grouping with a testframe configuration container.";
+    container testframe {
       description
-        "Contains the filtering rules for processing only
-         a specific subset of the frames.";
+        "Generated traffic burst parameters.";
       leaf type {
         type identityref {
-          base ntta:testframe-filter;
+          base ntta:testframe-type;
         }
-        mandatory true;
+        default "ntta:unspecified";
         description
-          "Type of the applied filter. External modules can
-           define alternative filter type identities.";
+          "The 'unspecified' default value enables the option
+           for configuration of the testframe type of the traffic
+           analyzer outside of the data model specified
+           configuration interface.";
+      }
+      container filter {
+        if-feature "testframe-filter";
+        presence "When present packets are
+                  filtered before analyzed according
+                  to the filter type";
+        description
+          "Contains the filtering rules for processing only
+           a specific subset of the frames as test frames.";
+        leaf type {
+          type identityref {
+            base ntta:testframe-filter;
+          }
+          mandatory true;
+          description
+            "Type of the applied filter. External modules can
+             define alternative filter type identities.";
+        }
       }
     }
   }
@@ -339,8 +438,8 @@ module ietf-traffic-analyzer {
     container traffic-analyzer {
       presence "Enables the traffic analyzer.";
       description
-        "Traffic analyzer for ingress direction.";
-      uses filter-data;
+        "Traffic analyzer top container.";
+      uses testframe-config-data;
       uses capture-config-data;
       container state {
         config false;
@@ -353,7 +452,7 @@ module ietf-traffic-analyzer {
   }
 
   augment "/if:interfaces/if:interface/ntta:traffic-analyzer/"
-        + "ntta:testframe-filter" {
+        + "ntta:testframe/ntta:filter" {
     when "derived-from-or-self(ntta:type, 'ntta:bit-field-match')";
     description
       "Logical AND of masked bit fields.";
