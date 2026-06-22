@@ -36,12 +36,6 @@ Such a mechanism should allow the control and monitoring of the data plane traff
 
 This document defines a YANG <xref target="RFC7950"/> data model which is composed of two YANG modules for test traffic generator and analyzer functions.
     </t>
-
-<section title="Acronyms">
-  <t>DUT: Device Under Test</t>
-  <t>TA: Traffic Analyzer</t>
-  <t>TG: Traffic Generator</t>
-</section>
 <section anchor="problem" title="Problem Statement">
     <t>
 Network interconnect tests require active network
@@ -83,7 +77,6 @@ standard protocols like Network Configuration Protocol
 (NETCONF) <xref target="RFC6241"/>.
 
     </t>
-</section>
 <section title="Objectives">
     <t>
 This section specifies the design objectives for the data model. It should:
@@ -102,9 +95,11 @@ This section specifies the design objectives for the data model. It should:
 </list>
     </t>
 </section>
-<section anchor="data_model_overview" title="Data Model Overview">
+</section>     
+<section anchor="data_model_overview" title="Data Model">
+<section anchor="overview" title="Overview">     
     <t>
-The proposed data model splits the design into two YANG modules - (1) Traffic
+The data model splits the design into two YANG modules - (1) Traffic
 Generator module (TG) and (2) Traffic Analyzer module (TA). The modules are
 implemented as augmentations of the "ietf-interfaces" <xref target="RFC8343"/>
 module adding configuration and state data that model the
@@ -143,7 +138,6 @@ and overwritten with dynamic data according to this
 specification. In addition a dynamic payload can fill
 the remaining available space in the frame.
     </t>
-</section>
 </section>
 <section title="Using the Network Interconnect Tester Data Model">
 <t>
@@ -267,6 +261,7 @@ module: ietf-traffic-analyzer
         </figure>
 </t>
 </section>
+</section>    
 <section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
 <t>
 This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
@@ -293,7 +288,7 @@ module ietf-traffic-generator {
   organization
     "IETF Benchmarking Methodology Working Group";
   contact
-    "WG Web:   <http://tools.ietf.org/wg/bmwg/>
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
      WG List:  BMWG <mailto:bmwg@ietf.org>
 
      Author:   Vladimir Vassilev
@@ -619,7 +614,7 @@ module ietf-traffic-generator {
 
 <section title="Traffic Analyzer Module YANG" anchor="traffic-analyzer-module">
 <t>
-This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
+This module imports modules defined in <xref target="RFC8341"/>, <xref target="RFC8343"/>, and <xref target="RFC9911"/>.
 </t>
 <t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-22.yang"</t>
         <figure>
@@ -641,12 +636,14 @@ module ietf-traffic-analyzer {
   }
   import ietf-netconf-acm {
     prefix nacm;
+    reference
+      "RFC 8341: Network Configuration Access Control Model";                
   }
 
   organization
     "IETF Benchmarking Methodology Working Group";
   contact
-    "WG Web:   <http://tools.ietf.org/wg/bmwg/>
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
      WG List:  BMWG <mailto:bmwg@ietf.org>
 
      Author:   Vladimir Vassilev
@@ -896,18 +893,20 @@ module ietf-traffic-analyzer {
       leaf max-frames-visible {
         type uint64;
         description
-          "Maximum number of frame entries available in the state/capture/frames container.";
+          "Maximum number of frame entries available in
+           the state/capture/frames container.";
       }
       leaf max-frame-data-visible {
         type uint32;
         description
-          "Maximum length of data per frame available in the state/capture/frames/frame/data.";
+          "Maximum length of data per frame available in
+           the state/capture/frames/frame/data.";
       }
       container start-trigger {
         presence "Enables trigger condition that starts
                   the capture process.";
         description
-          "Configures when the capture start is triggered.";
+          "Specifies when the capture start is triggered.";
         choice start-trigger {
           mandatory true;
           description
@@ -937,7 +936,7 @@ module ietf-traffic-analyzer {
         presence "Enables trigger condition that stops
                   the capture process.";
         description
-          "Configures when the capture is stopped.";
+          "Specifies when the capture is stopped.";
         choice stop-trigger {
           mandatory true;
           description
@@ -957,9 +956,8 @@ module ietf-traffic-analyzer {
       }
       container filter {
         if-feature "capture-filter";
-        presence "When packets are filtered
-                  before captured according
-                  to the filter type";
+        presence "When packets are filtered before captured
+                  according to the filter type";
         description
           "Contains the filtering rules for capturing only
            a specific subset of the frames.";
@@ -978,8 +976,8 @@ module ietf-traffic-analyzer {
 
   grouping capture-data {
     description
-      "Grouping with statistics and data
-       of one or more captured frame.";
+      "Grouping with statistics and data of one or more
+       captured frames.";
     container capture {
       if-feature "capture";
       description
@@ -1135,14 +1133,14 @@ registry group.
 
 <figure><artwork><![CDATA[
    Name: ietf-traffic-generator
-   Maintained by IANA?  Y/N
+   Maintained by IANA?  N
    Namespace: urn:ietf:params:xml:ns:yang:ietf-traffic-generator
    Prefix: nttg
    Reference: RFC XXXX
 
 
    Name: ietf-traffic-analyzer
-   Maintained by IANA?  Y/N
+   Maintained by IANA?  N
    Namespace: urn:ietf:params:xml:ns:yang:ietf-traffic-analyzer
    Prefix: ntta
    Reference: RFC XXXX
@@ -1162,21 +1160,21 @@ The presence of '/if:interfaces/if:interface/ntta:traffic-analyzer' container de
         <section anchor="Security" title="Security Considerations">
 <t>
 This section is modeled after the template described in Section 3.7.1
-of <xref target="RFC9907"/>.
+of <xref target="RFC9907"/>.</t>
+<t>
 The YANG modules “ietf-traffic-generator” and “ietf-traffic-analyzer”
 define a data model that is
 designed to be accessed via YANG-based management protocols,
 such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/>. These YANG-based management protocols
 (1) have to use a secure transport layer (e.g., Secure Shell (SSH)
 <xref target="RFC4252"/>, TLS <xref target="RFC8446"/>, and QUIC <xref target="RFC9000"/>) and (2) have to use
-mutual authentication.
+mutual authentication.</t>
+<t>
 The Network Configuration Access Control Model (NACM) <xref target="RFC8341"/>
 provides the means to restrict access for particular NETCONF users to a preconfigured subset of all available NETCONF protocol operations and content.
 </t>
             <section title="ietf-traffic-generator.yang">
             <t>
-The ietf-traffic-generator YANG module controls a stateless traffic generator which is intended to be used for testing and verification purposes but can be used for malicious purposes like generating network traffic part of a Denial-of-Service (DoS) attack.
-
 There are a number of data nodes defined in this YANG module that are
 writable/creatable/deletable (i.e., "config true", which is the
 default).  All writable data nodes are likely to be sensitive or
@@ -1186,14 +1184,12 @@ nodes without proper protection or authentication can have a negative
 effect on network operations.  The following subtrees and data nodes
 have particular sensitivities/vulnerabilities:
                     <list style="symbols">
-                        <t>/if:interfaces/if:interface/nttg:traffic-generator</t>
+                        <t>/if:interfaces/if:interface/nttg:traffic-generator: This be used for malicious purposes like generating network traffic part of a Denial-of-Service (DoS) attack.</t>
                     </list>
             </t>
             </section>
             <section title="ietf-traffic-analyzer.yang">
                 <t>
-The ietf-traffic-analyzer YANG module controls a traffic analyzer which is designed for use in testing and verification but can be used for reading information contained in packets sent and received on any of the interfaces on systems that implement the capture feature.
-
 Some of the readable data nodes in this YANG module may be considered
 sensitive or vulnerable in some network environments.  It is thus
 important to control read access (e.g., via get, get-config, or
@@ -1202,7 +1198,11 @@ subtrees and data nodes have particular sensitivities/
 vulnerabilities:
 
                     <list style="symbols">
-                        <t>/if:interfaces/if:interface/ntta:traffic-analyzer/ntta:capture/ntta:frames/ntta:frame/ntta:data</t>
+                        <t>/if:interfaces/if:interface/ntta:traffic-analyzer/ntta:capture/ntta:frames/ntta:frame/ntta:data: is designed for use in testing and verification but can be used
+      for reading information contained in packets sent and received on any
+      of the interfaces on systems that implement the capture feature
+      and, thus, disclose sensitive data.
+</t>
                     </list>
                </t>
             </section>
@@ -1212,16 +1212,15 @@ vulnerabilities:
 <back>
 
     <references title="Normative References">
+      <?rfc include='reference.RFC.2544'?>         
       <?rfc include='reference.RFC.3688'?>
       <?rfc include='reference.RFC.6020'?>
       <?rfc include='reference.RFC.8341'?>
       <?rfc include='reference.RFC.9911'?>
-      <?rfc include='reference.RFC.7224'?>
       <?rfc include='reference.RFC.7950'?>
       <?rfc include='reference.RFC.8343'?>
     </references>
     <references title="Informative References">
-      <?rfc include='reference.RFC.2544'?>
       <?rfc include='reference.RFC.4252'?>
       <?rfc include='reference.RFC.6241'?>
       <?rfc include='reference.RFC.8040'?>
