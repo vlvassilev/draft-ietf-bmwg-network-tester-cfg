@@ -1,8 +1,8 @@
 Extract YANG modules XML to HTML or TXT:
 
-rfcstrip draft-ietf-bmwg-network-tester-cfg-11.xml
+rfcstrip draft-ietf-bmwg-network-tester-cfg.xml
 
-xml2rfc draft-ietf-bmwg-network-tester-cfg-11.xml -b draft-ietf-bmwg-network-tester-cfg-11 --text --html
+xml2rfc draft-ietf-bmwg-network-tester-cfg.xml -b draft-ietf-bmwg-network-tester-cfg --text --html
 
 source ../pyang/my_project_env/bin/activate
 pyang  -f yang --ietf --strict --yang-canonical --verbose --path  /usr/share/yuma/modules/ietf:/usr/share/yuma/modules/ietf-draft ietf-traffic-generator.yang | tee ietf-traffic-generator.yang.canonical

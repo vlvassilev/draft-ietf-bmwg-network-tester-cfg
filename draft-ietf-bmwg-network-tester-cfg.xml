@@ -9,9 +9,9 @@
 <?rfc iprnotified="no"?>
 <?rfc strict="yes"?>
 <rfc ipr="trust200902"   category="std"
-     docName="draft-ietf-bmwg-network-tester-cfg-12" >
+     docName="draft-ietf-bmwg-network-tester-cfg-13" >
     <front>
-    <title abbrev="NETWORK-TESTER-MANAGEMENT-11">A YANG Data Model for Network Tester Management</title>
+    <title abbrev="NETWORK-TESTER-MANAGEMENT-13">A YANG Data Model for Network Tester Management</title>
     <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
       <organization>Lightside Instruments AS</organization>
       <address>
@@ -22,7 +22,7 @@
     <workgroup>Benchmarking Working Group</workgroup>
     <abstract>
         <t>
-This document specifies a YANG data model for use in network interconnect testing setups that contains instances of traffic generator and traffic analyzer.
+This document specifies a YANG data model for use in network interconnect testing setups that contain instances of traffic generator and traffic analyzer.
         </t>
     </abstract>
 </front>
@@ -77,6 +77,7 @@ standard protocols like Network Configuration Protocol
 (NETCONF) <xref target="RFC6241"/>.
 
     </t>
+</section>
 <section title="Objectives">
     <t>
 This section specifies the design objectives for the data model. It should:
@@ -95,9 +96,9 @@ This section specifies the design objectives for the data model. It should:
 </list>
     </t>
 </section>
-</section>     
+</section>
 <section anchor="data_model_overview" title="Data Model">
-<section anchor="overview" title="Overview">     
+<section anchor="overview" title="Overview">
     <t>
 The data model splits the design into two YANG modules - (1) Traffic
 Generator module (TG) and (2) Traffic Analyzer module (TA). The modules are
@@ -261,7 +262,7 @@ module: ietf-traffic-analyzer
         </figure>
 </t>
 </section>
-</section>    
+</section>
 <section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
 <t>
 This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
@@ -637,7 +638,7 @@ module ietf-traffic-analyzer {
   import ietf-netconf-acm {
     prefix nacm;
     reference
-      "RFC 8341: Network Configuration Access Control Model";                
+      "RFC 8341: Network Configuration Access Control Model";
   }
 
   organization
@@ -1184,7 +1185,7 @@ nodes without proper protection or authentication can have a negative
 effect on network operations.  The following subtrees and data nodes
 have particular sensitivities/vulnerabilities:
                     <list style="symbols">
-                        <t>/if:interfaces/if:interface/nttg:traffic-generator: This be used for malicious purposes like generating network traffic part of a Denial-of-Service (DoS) attack.</t>
+                        <t>/if:interfaces/if:interface/nttg:traffic-generator: This can be used for malicious purposes like generating network traffic part of a Denial-of-Service (DoS) attack.</t>
                     </list>
             </t>
             </section>
@@ -1212,7 +1213,7 @@ vulnerabilities:
 <back>
 
     <references title="Normative References">
-      <?rfc include='reference.RFC.2544'?>         
+      <?rfc include='reference.RFC.2544'?>
       <?rfc include='reference.RFC.3688'?>
       <?rfc include='reference.RFC.6020'?>
       <?rfc include='reference.RFC.8341'?>

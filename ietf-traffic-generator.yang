@@ -17,7 +17,7 @@ module ietf-traffic-generator {
   organization
     "IETF Benchmarking Methodology Working Group";
   contact
-    "WG Web:   <http://tools.ietf.org/wg/bmwg/>
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
      WG List:  BMWG <mailto:bmwg@ietf.org>
 
      Author:   Vladimir Vassilev

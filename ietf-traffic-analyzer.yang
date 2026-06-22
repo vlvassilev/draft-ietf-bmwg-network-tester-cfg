@@ -15,12 +15,14 @@ module ietf-traffic-analyzer {
   }
   import ietf-netconf-acm {
     prefix nacm;
+    reference
+      "RFC 8341: Network Configuration Access Control Model";
   }
 
   organization
     "IETF Benchmarking Methodology Working Group";
   contact
-    "WG Web:   <http://tools.ietf.org/wg/bmwg/>
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
      WG List:  BMWG <mailto:bmwg@ietf.org>
 
      Author:   Vladimir Vassilev
@@ -270,18 +272,20 @@ module ietf-traffic-analyzer {
       leaf max-frames-visible {
         type uint64;
         description
-          "Maximum number of frame entries available in the state/capture/frames container.";
+          "Maximum number of frame entries available in
+           the state/capture/frames container.";
       }
       leaf max-frame-data-visible {
         type uint32;
         description
-          "Maximum length of data per frame available in the state/capture/frames/frame/data.";
+          "Maximum length of data per frame available in
+           the state/capture/frames/frame/data.";
       }
       container start-trigger {
         presence "Enables trigger condition that starts
                   the capture process.";
         description
-          "Configures when the capture start is triggered.";
+          "Specifies when the capture start is triggered.";
         choice start-trigger {
           mandatory true;
           description
@@ -311,7 +315,7 @@ module ietf-traffic-analyzer {
         presence "Enables trigger condition that stops
                   the capture process.";
         description
-          "Configures when the capture is stopped.";
+          "Specifies when the capture is stopped.";
         choice stop-trigger {
           mandatory true;
           description
@@ -331,9 +335,8 @@ module ietf-traffic-analyzer {
       }
       container filter {
         if-feature "capture-filter";
-        presence "When packets are filtered
-                  before captured according
-                  to the filter type";
+        presence "When packets are filtered before captured
+                  according to the filter type";
         description
           "Contains the filtering rules for capturing only
            a specific subset of the frames.";
@@ -352,8 +355,8 @@ module ietf-traffic-analyzer {
 
   grouping capture-data {
     description
-      "Grouping with statistics and data
-       of one or more captured frame.";
+      "Grouping with statistics and data of one or more
+       captured frames.";
     container capture {
       if-feature "capture";
       description
