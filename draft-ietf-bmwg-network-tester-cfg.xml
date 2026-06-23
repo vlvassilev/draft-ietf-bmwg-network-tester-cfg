@@ -83,7 +83,7 @@ standard protocols like Network Configuration Protocol
 This section specifies the design objectives for the data model. It should:
 
 <list style="symbols">
-  <t>provide means to specify the generated traffic as streams of cyclic sequence of bursts with configurable frame size, frame data, interframe gap and interburst gap.</t>
+  <t>provide means to specify the generated traffic as streams of cyclic sequence of bursts with configurable frame size, frame data, interframe gap [IEEE802.3-2014], and interburst gap.</t>
   <t>have a mandatory single stream mode and optional multi stream mode.</t>
   <t>provide means for configuration of traffic streams with static frame data where frames with identical frame data are sent during the lifetime of the stream.</t>
   <t>provide means for configuration of traffic streams with dynamic frame data where frames contain fields with dynamic data like generation time and sequence number.</t>
@@ -129,7 +129,7 @@ The gaps consist of octets that are idle and octets that are used for lower leve
 
 The TG module can configure deterministic cyclic or finite sequence of static and dynamic frames.
 
-For example an implementation of a dynamic test frame could
+For example, an implementation of a dynamic test frame could
 have the last 18 octets of the payload of the generated
 frames contain incrementing sequence number field
 (8 octets followed by timestamp field in the
@@ -425,7 +425,7 @@ module ietf-traffic-generator {
       units "octets";
       mandatory true;
       description
-        "Size of the frames generated. For example for
+        "Size of the frames generated. For example, for
          Ethernet interfaces the following definition
          applies:
 
@@ -483,6 +483,8 @@ module ietf-traffic-generator {
          should be included in the gap. Thus, the minimum
          value for standard Ethernet transmission should be considered
          20 octets.";
+      reference
+        "IEEE WG802.3 - Ethernet Working Group";
     }
     leaf burst-gap {
       type uint32;
@@ -1166,7 +1168,7 @@ of <xref target="RFC9907"/>.</t>
 The YANG modules “ietf-traffic-generator” and “ietf-traffic-analyzer”
 define a data model that is
 designed to be accessed via YANG-based management protocols,
-such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/>. These YANG-based management protocols
+such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/> and RESTCONF <xref target="RFC8040"/>. These YANG-based management protocols
 (1) have to use a secure transport layer (e.g., Secure Shell (SSH)
 <xref target="RFC4252"/>, TLS <xref target="RFC8446"/>, and QUIC <xref target="RFC9000"/>) and (2) have to use
 mutual authentication.</t>
