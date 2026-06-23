@@ -83,7 +83,7 @@ standard protocols like Network Configuration Protocol
 This section specifies the design objectives for the data model. It should:
 
 <list style="symbols">
-  <t>provide means to specify the generated traffic as streams of cyclic sequence of bursts with configurable frame size, frame data, interframe gap [IEEE802.3-2014], and interburst gap.</t>
+  <t>provide means to specify the generated traffic as streams of cyclic sequence of bursts with configurable frame size, frame data, gap, and interburst gap.</t>
   <t>have a mandatory single stream mode and optional multi stream mode.</t>
   <t>provide means for configuration of traffic streams with static frame data where frames with identical frame data are sent during the lifetime of the stream.</t>
   <t>provide means for configuration of traffic streams with dynamic frame data where frames contain fields with dynamic data like generation time and sequence number.</t>
@@ -267,7 +267,7 @@ module: ietf-traffic-analyzer
 <t>
 This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
 </t>
-<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-06-22.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-06-23.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-generator {
@@ -316,7 +316,7 @@ module ietf-traffic-generator {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-06-22 {
+  revision 2026-06-23 {
     description
       "Initial revision.";
     reference
@@ -483,8 +483,6 @@ module ietf-traffic-generator {
          should be included in the gap. Thus, the minimum
          value for standard Ethernet transmission should be considered
          20 octets.";
-      reference
-        "IEEE WG802.3 - Ethernet Working Group";
     }
     leaf burst-gap {
       type uint32;
@@ -619,7 +617,7 @@ module ietf-traffic-generator {
 <t>
 This module imports modules defined in <xref target="RFC8341"/>, <xref target="RFC8343"/>, and <xref target="RFC9911"/>.
 </t>
-<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-22.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-23.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-analyzer {
@@ -673,7 +671,7 @@ module ietf-traffic-analyzer {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-06-22 {
+  revision 2026-06-23 {
     description
       "Initial revision.";
     reference
@@ -1167,8 +1165,8 @@ of <xref target="RFC9907"/>.</t>
 <t>
 The YANG modules “ietf-traffic-generator” and “ietf-traffic-analyzer”
 define a data model that is
-designed to be accessed via YANG-based management protocols,
-such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/> and RESTCONF <xref target="RFC8040"/>. These YANG-based management protocols
+designed to be accessed via YANG-based transactional management protocols,
+such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/>. These YANG-based management protocols
 (1) have to use a secure transport layer (e.g., Secure Shell (SSH)
 <xref target="RFC4252"/>, TLS <xref target="RFC8446"/>, and QUIC <xref target="RFC9000"/>) and (2) have to use
 mutual authentication.</t>
@@ -1226,7 +1224,6 @@ vulnerabilities:
     <references title="Informative References">
       <?rfc include='reference.RFC.4252'?>
       <?rfc include='reference.RFC.6241'?>
-      <?rfc include='reference.RFC.8040'?>
       <?rfc include='reference.RFC.8340'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.9000'?>

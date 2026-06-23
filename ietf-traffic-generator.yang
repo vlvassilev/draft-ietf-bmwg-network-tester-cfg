@@ -44,7 +44,7 @@ module ietf-traffic-generator {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-06-22 {
+  revision 2026-06-23 {
     description
       "Initial revision.";
     reference
@@ -153,7 +153,7 @@ module ietf-traffic-generator {
       units "octets";
       mandatory true;
       description
-        "Size of the frames generated. For example for
+        "Size of the frames generated. For example, for
          Ethernet interfaces the following definition
          applies:
 
