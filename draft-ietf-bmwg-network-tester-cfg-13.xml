@@ -1,1 +1,1409 @@
-draft-ietf-bmwg-network-tester-cfg.xml
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="rfc2629.xslt"?>
+<!DOCTYPE rfc SYSTEM 'rfc2629.dtd'>
+<?rfc toc="yes"?>
+<?rfc compact="no"?>
+<?rfc subcompact="no"?>
+<?rfc symrefs="yes" ?>
+<?rfc sortrefs="yes"?>
+<?rfc iprnotified="no"?>
+<?rfc strict="yes"?>
+<rfc ipr="trust200902"   category="std"
+     docName="draft-ietf-bmwg-network-tester-cfg-13" >
+    <front>
+    <title abbrev="NETWORK-TESTER-MANAGEMENT-13">A YANG Data Model for Network Tester Management</title>
+    <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
+      <organization>Lightside Instruments AS</organization>
+      <address>
+        <email>vladimir@lightside-instruments.com</email>
+      </address>
+    </author>
+    <date/>
+    <workgroup>Benchmarking Working Group</workgroup>
+    <abstract>
+        <t>
+This document specifies a YANG data model for use in network interconnect testing setups that contain instances of traffic generator and traffic analyzer.
+        </t>
+    </abstract>
+</front>
+<middle>
+<section title="Introduction">
+    <t>
+There is a need for a standard mechanism for specification
+of the transactions part of network tests and their implementation
+over standardized network management protocols.
+Such a mechanism should allow the control and monitoring of the data plane traffic in a transactional manner.
+
+This document defines a YANG <xref target="RFC7950"/> data model which is composed of two YANG modules for test traffic generator and analyzer functions.
+    </t>
+<section anchor="problem" title="Problem Statement">
+    <t>
+Network interconnect tests require active network
+elements part of the tested network that generate
+test traffic and network elements that analyze
+the test traffic at one or more points of its forwarding path.
+
+A network interconnect tester is an entity that can either
+generate test traffic, analyze test traffic, or both.
+
+Figure 1, borrowed from <xref target="RFC2544"/>,
+represents the horseshoe test setup topology consisting
+of a single tester and a single Device Under Test (DUT) connected in a
+network interconnect loop.
+
+        <figure>
+            <name>Test setup with tester that both sends the test traffic and receives it back</name>
+            <artwork><![CDATA[
+                 +------------+
+                 |            |
+    +------------|  tester    |<-------------+
+    |            |            |              |
+    |            +------------+              |
+    |                                        |
+    |            +------------+              |
+    |            |            |              |
+    +----------->|    DUT     |--------------+
+                 |            |
+                 +------------+
+
+            ]]></artwork>
+        </figure>
+
+This document defines a YANG data
+model of a network interconnect tester that can be used for
+development of vendor-independent network interconnect tests
+and utilize the advantages of transactional management using
+standard protocols like Network Configuration Protocol
+(NETCONF) <xref target="RFC6241"/>.
+
+    </t>
+</section>
+<section title="Objectives">
+    <t>
+This section specifies the design objectives for the data model. It should:
+
+<list style="symbols">
+  <t>provide means to specify the generated traffic as streams of cyclic sequence of bursts with configurable frame size, frame data, gap, and interburst gap.</t>
+  <t>have a mandatory single stream mode and optional multi stream mode.</t>
+  <t>provide means for configuration of traffic streams with static frame data where frames with identical frame data are sent during the lifetime of the stream.</t>
+  <t>provide means for configuration of traffic streams with dynamic frame data where frames contain fields with dynamic data like generation time and sequence number.</t>
+  <t>allow third parties to augment the base modules with alternative dynamic fields of frame data extensions.</t>
+  <t>provide means for realtime synchronization and orchestration of the generated streams.</t>
+  <t>provide counters for received test traffic frames and octets.</t>
+  <t>provide latency statistic in the case of test traffic with dynamic frame data that includes timestamp.</t>
+  <t>provide sequence number errors in the case of test traffic with dynamic frame data that includes sequence number.</t>
+  <t>provide means for capturing traffic frames data.</t>
+</list>
+    </t>
+</section>
+</section>
+<section anchor="data_model_overview" title="Data Model">
+<section anchor="overview" title="Overview">
+    <t>
+The data model splits the design into two YANG modules - (1) Traffic
+Generator module (TG) and (2) Traffic Analyzer module (TA). The modules are
+implemented as augmentations of the "ietf-interfaces" <xref target="RFC8343"/>
+module adding configuration and state data that model the
+functionality of a network interconnect tester.  The TA and TG modules concept is
+illustrated with the diagram depicted in Figure 2 with a tester with two interfaces (named "eth0" and "eth1") connected in a loop with single DUT.
+
+        <figure>
+            <name>Test setup where TG and TA modules are colocated on the same entity</name>
+            <artwork><![CDATA[
+                 +----------------+
+     eth0.egress |                | eth1.ingress
+    +------------| TG  tester  TA |<-------------+
+    |            |                |              |
+    |            +----------------+              |
+    |                                            |
+    |              +------------+                |
+    |              |            |                |
+    +------------->|    DUT     |----------------+
+                   |            |
+                   +------------+
+
+            ]]></artwork>
+        </figure>
+The data plane model used is of a sequence of octets that are either part of a frame or a gap.
+The gaps consist of octets that are idle and octets that are used for lower level protocol framing.
+
+The TG module can configure deterministic cyclic or finite sequence of static and dynamic frames.
+
+For example, an implementation of a dynamic test frame could
+have the last 18 octets of the payload of the generated
+frames contain incrementing sequence number field
+(8 octets followed by timestamp field in the
+<xref target="IEEE1588"/> format (10 octets). If frame data is defined
+for the last 18 octets of the payload, it will be ignored
+and overwritten with dynamic data according to this
+specification. In addition a dynamic payload can fill
+the remaining available space in the frame.
+    </t>
+</section>
+<section title="Using the Network Interconnect Tester Data Model">
+<t>
+  A basic example of how the data model can be used in transactional network test program to control the testers part of a network and report counter statistics and timing measurement data is presented in <xref target="examples"/>.
+  All example cases present the configuration and state data from a single test trial. One of the examples demonstrates the use of the <xref target="RFC2544"/> defined test frame packet.
+  The search algorithm logic that operates to control the trial configuration is outside the scope of this document.
+</t>
+</section>
+<section title="Traffic Generator Module Tree Diagram" anchor="traffic-generator-module-tree-diagram">
+<t>
+  The meaning of the symbols in the YANG tree diagrams are defined in <xref target="RFC8340"/>
+        <figure>
+            <artwork><![CDATA[
+module: ietf-traffic-generator
+
+  augment /if:interfaces/if:interface:
+    +--rw traffic-generator!
+       +--rw (type)
+       |  +--:(single-stream)
+       |  |  +--rw testframe-type?     identityref
+       |  |  +--rw frame-size          uint32
+       |  |  +--rw frame-data?         binary
+       |  |  +--rw gap      uint32
+       |  |  +--rw burst-gap?     uint32
+       |  |  +--rw frames-per-burst?   uint32
+       |  |  +--rw modifiers
+       |  |     +--rw modifier* [id]
+       |  |        +--rw id             uint32
+       |  |        +--rw action         identityref
+       |  |        +--rw offset         uint32
+       |  |        +--rw mask           binary
+       |  |        +--rw repetitions    uint32
+       |  +--:(multi-stream)
+       |     +--rw streams
+       |        +--rw stream* [id]
+       |           +--rw id                   uint32
+       |           +--rw testframe-type?      identityref
+       |           +--rw frame-size           uint32
+       |           +--rw frame-data?          binary
+       |           +--rw gap                  uint32
+       |           +--rw burst-gap?           uint32
+       |           +--rw frames-per-burst?    uint32
+       |           +--rw frames-per-stream    uint32
+       |           +--rw stream-gap           uint32
+       |           +--rw modifiers
+       |              +--rw modifier* [id]
+       |                 +--rw id             uint32
+       |                 +--rw action         identityref
+       |                 +--rw offset         uint32
+       |                 +--rw mask           binary
+       |                 +--rw repetitions    uint32
+       +--rw realtime-epoch?
+       |        yang:date-and-time {realtime-epoch}?
+       +--rw start-delay?              uint64
+       +--rw total-frames?             uint64
+]]></artwork>
+        </figure>
+</t>
+</section>
+<section title="Traffic Analyzer Module Tree Diagram" anchor="traffic-analyzer-module-tree-diagram">
+<t>
+        <figure>
+             <artwork><![CDATA[
+module: ietf-traffic-analyzer
+
+  augment /if:interfaces/if:interface:
+    +--rw traffic-analyzer!
+       +--rw testframe
+       |  +--rw type?     identityref
+       |  +--rw filter! {testframe-filter}?
+       |     +--rw type      identityref
+       |     +--rw mask?     binary
+       |     +--rw data?     binary
+       |     +--rw offset    uint32
+       +--rw capture! {capture}?
+       |  +--rw max-frames-visible?       uint64
+       |  +--rw max-frame-data-visible?   uint32
+       |  +--rw start-trigger!
+       |  |  +--rw (start-trigger)
+       |  |     +--:(frame-index)
+       |  |     |  +--rw frame-index?       uint64
+       |  |     +--:(testframe-index)
+       |  |        +--rw testframe-index?   uint64
+       |  +--rw stop-trigger!
+       |  |  +--rw (stop-trigger)
+       |  |     +--:(when-full)
+       |  |        +--rw when-full?   empty
+       |  +--rw filter! {capture-filter}?
+       |     +--rw type    identityref
+       +--ro state
+          +--ro statistics
+          |  +--ro pkts?          yang:counter64
+          |  +--ro octets?        yang:counter64
+          |  +--ro idle-octets?   yang:counter64 {idle-octets-counter}?
+          |  +--ro errors?        yang:counter64
+          +--ro testframe-statistics
+          |  +--ro pkts?                  yang:counter64
+          |  +--ro sequence-errors?       yang:counter64
+          |  +--ro payload-errors?        yang:counter64
+          |  +--ro latency
+          |  |  +--ro samples?   uint64
+          |  |  +--ro min?       uint64
+          |  |  +--ro max?       uint64
+          |  |  +--ro average?   uint64
+          |  |  +--ro latest?    uint64
+          |  +--ro last-sequence-error
+          |     +--ro timestamp?   yang:date-and-time
+          |     +--ro expected?    uint64
+          |     +--ro received?    uint64
+          +--ro capture {capture}?
+             +--ro statistics
+             |  +--ro pkts?     yang:counter64
+             |  +--ro octets?   yang:counter64
+             +--ro frames
+                +--ro frame* [sequence-number]
+                   +--ro sequence-number    uint64
+                   +--ro timestamp?         yang:date-and-time
+                   +--ro size?              uint32
+                   +--ro data?              binary
+]]></artwork>
+        </figure>
+</t>
+</section>
+</section>
+<section title="Traffic Generator Module YANG" anchor="traffic-generator-module">
+<t>
+This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
+</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-06-23.yang"</t>
+        <figure>
+            <artwork><![CDATA[
+module ietf-traffic-generator {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-traffic-generator";
+  prefix nttg;
+
+  import ietf-interfaces {
+    prefix if;
+    reference
+      "RFC 8343: A YANG Data Model for Interface Management";
+  }
+  import ietf-yang-types {
+    prefix yang;
+    reference
+      "RFC 9911: Common YANG Data Types";
+  }
+
+  organization
+    "IETF Benchmarking Methodology Working Group";
+  contact
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
+     WG List:  BMWG <mailto:bmwg@ietf.org>
+
+     Author:   Vladimir Vassilev
+               <mailto:vladimir@lightside-instruments.com>";
+  description
+    "This module contains a collection of YANG definitions for
+     management of the traffic generator functionality part
+     of network interconnect testers.
+
+     Copyright (c) 2026 IETF Trust and the persons identified as
+     authors of the code.  All rights reserved.
+
+     Redistribution and use in source and binary forms, with or
+     without modification, is permitted pursuant to, and subject to
+     the license terms contained in, the Revised BSD License set
+     forth in Section 4.c of the IETF Trust's Legal Provisions
+     Relating to IETF Documents
+     (https://trustee.ietf.org/license-info).
+
+     All revisions of IETF and IANA published modules can be found
+     at the YANG Parameters registry group
+     (https://www.iana.org/assignments/yang-parameters).
+
+     This version of this YANG module is part of RFC XXXX; see
+     the RFC itself for full legal notices.";
+
+  revision 2026-06-23 {
+    description
+      "Initial revision.";
+    reference
+      "RFC XXXX: A YANG Data Model for
+                 Network Tester Management";
+  }
+
+  feature multi-stream {
+    description
+      "The device can generate multi-stream traffic.";
+  }
+
+  feature realtime-epoch {
+    description
+      "The device can generate traffic precisely
+       at configured realtime epoch.";
+  }
+
+  identity testframe-type {
+    description
+      "Base identity for all test frame types.";
+  }
+
+  identity static {
+    base testframe-type;
+    description
+      "Indicates static test frame.
+       The frame data and size are constant.";
+  }
+
+  identity dynamic {
+    base testframe-type;
+    description
+      "Base identity for dynamic test frame.
+
+       When used itself, it identifies unspecified
+       dynamic test frame type configured outside
+       of the data model specified configuration
+       interface.";
+  }
+
+  identity modifier-action-type {
+    description
+      "Base identity for all modifier action types.";
+  }
+
+  identity increment {
+    base modifier-action-type;
+    description
+      "Indicates increment modifier action.";
+  }
+
+  identity decrement {
+    base modifier-action-type;
+    description
+      "Indicates decrement modifier action.";
+  }
+
+  identity random {
+    base modifier-action-type;
+    description
+      "Indicates random modifier action.";
+  }
+
+  grouping common-data {
+    description
+      "Common configuration data.";
+    leaf realtime-epoch {
+      if-feature "realtime-epoch";
+      type yang:date-and-time;
+      description
+        "If this leaf is present the stream generation will start
+         at the specified realtime epoch.";
+    }
+    leaf start-delay {
+      type uint64;
+      units "octets";
+      description
+        "If this leaf is present, the traffic generation will start
+         after the specified number of idle octets have elapsed.";
+    }
+    leaf total-frames {
+      type uint64;
+      description
+        "If this leaf is present the traffic generation will stop
+         after the specified number of frames are generated.";
+    }
+  }
+
+  grouping burst-data {
+    description
+      "Generated traffic burst parameters.";
+    leaf testframe-type {
+      type identityref {
+        base nttg:testframe-type;
+      }
+      default "nttg:static";
+      description
+        "In case of dynamic test frames this leaf
+         can specify a derived dynamic test frame identity.
+         For static test frames there is no practical use
+         of derived identities.";
+    }
+    leaf frame-size {
+      type uint32;
+      units "octets";
+      mandatory true;
+      description
+        "Size of the frames generated. For example, for
+         Ethernet interfaces the following definition
+         applies:
+
+         Ethernet frame-size, in octets, includes:
+         * Destination Address (6 octets),
+         * Source Address (6 octets),
+         * Frame Type (2 octets),
+         * Data (min 46 octets or 42 octets + 4 octets 802.1Q tag),
+         * Frame Check Sequence (FCS) (4 octets)
+
+         Ethernet frame-size does not include:
+         * Preamble (dependent on MAC configuration
+                    by default 7 octets),
+         * Start of frame delimiter (1 octet)
+
+         Minimum standard Ethernet frame-size is 64 bytes but
+         generators might support smaller sizes for validation.";
+    }
+    leaf frame-data {
+      type binary;
+      description
+        "The raw frame data.
+         The length of the specified data can be
+         shorter, then the '../frame-size' value
+         specifying only the header or the header and the
+         payload with or without the 4-byte FCS data
+         in the case of a Ethernet frame. If the frame data string
+         specified is longer, then '../frame-size' the excess
+         of the specified frame data is truncated.
+
+         In multi-stream mode, if 'frame-data' leaf for one of the
+         streams is not specified, it is the value specified for
+         the closest stream that precedes it that is used.";
+    }
+    leaf gap {
+      type uint32;
+      units "octets";
+      mandatory true;
+      description
+        "Length of the period between generated frames.
+         For example, for Ethernet interfaces the following
+         definition applies:
+
+         The gap between transmission of frames is the sum
+         of the minimum interframe gap (IFG) as defined in
+         IEEE 802.3 plus any additional idle octets plus
+         the preamble (7 octets) and the start of frame
+         delimiter (1 octet). A brief recovery time
+         between frames allows devices to prepare for
+         reception of the next frame. The minimum
+         interframe gap is 96-bit times (12-octet times) (the time it
+         takes to transmit 96-bits (12 octets) of raw data on the
+         medium). However, the preamble (7 octets) and start of
+         frame delimiter (1 octet) are considered a constant gap that
+         should be included in the gap. Thus, the minimum
+         value for standard Ethernet transmission should be considered
+         20 octets.";
+    }
+    leaf burst-gap {
+      type uint32;
+      units "octets";
+      description
+        "Is similar to the gap but takes place between
+         any two bursts of the stream.";
+    }
+    leaf frames-per-burst {
+      type uint32;
+      description
+        "Indicates number of frames contained in a burst.";
+    }
+  }
+
+  grouping modifier-data {
+    description
+      "Frame data modification parameters.";
+    container modifiers {
+      description
+        "Container holding the configured modifiers list.";
+      list modifier {
+        key "id";
+        description
+          "Each modifier specifies the action to be performed
+           on data at a certain offset.";
+        leaf id {
+          type uint32;
+          description
+            "Number specifying the identifier of the modifier.";
+        }
+        leaf action {
+          type identityref {
+            base nttg:modifier-action-type;
+          }
+          mandatory true;
+          description
+            "Modifier action type.";
+        }
+        leaf offset {
+          type uint32;
+          units "octets";
+          mandatory true;
+          description
+            "Offset of the modified data of the frame.";
+        }
+        leaf mask {
+          type binary;
+          mandatory true;
+          description
+            "Bit mask of the actual bits affected by the modifier.";
+        }
+        leaf repetitions {
+          type uint32;
+          mandatory true;
+          description
+            "Count of the packets that will repeat the data before
+             the modifier makes the next update.";
+        }
+      }
+    }
+  }
+
+  grouping multi-stream-data {
+    description
+      "Multi stream traffic generation parameters.";
+    container streams {
+      description
+        "A container holding the stream list.";
+      list stream {
+        key "id";
+        description
+          "Each stream repeats a burst until frames-per-stream
+           count is reached followed by stream-gap delay.";
+        leaf id {
+          type uint32;
+          description
+            "Number specifying the order of the stream.";
+        }
+        uses burst-data;
+        leaf frames-per-stream {
+          type uint32;
+          mandatory true;
+          description
+            "The count of frames to be generated before
+             generation of the next stream is started.";
+        }
+        leaf stream-gap {
+          type uint32;
+          units "octets";
+          mandatory true;
+          description
+            "Idle period after the last frame of the last burst.";
+        }
+        uses modifier-data;
+      }
+    }
+  }
+
+  augment "/if:interfaces/if:interface" {
+    description
+      "Traffic generator augmentations of 'ietf-interfaces'.";
+    container traffic-generator {
+      presence "Enables the traffic generator.";
+      description
+        "Traffic generator data.";
+      choice type {
+        mandatory true;
+        description
+          "Choice of the type of the generator:
+           Single or multi stream.";
+        case single-stream {
+          uses burst-data;
+          uses modifier-data;
+        }
+        case multi-stream {
+          uses multi-stream-data;
+        }
+      }
+      uses common-data;
+    }
+  }
+}
+]]></artwork>
+        </figure>
+
+<t>&lt;CODE ENDS></t>
+
+</section>
+
+<section title="Traffic Analyzer Module YANG" anchor="traffic-analyzer-module">
+<t>
+This module imports modules defined in <xref target="RFC8341"/>, <xref target="RFC8343"/>, and <xref target="RFC9911"/>.
+</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-23.yang"</t>
+        <figure>
+            <artwork><![CDATA[
+module ietf-traffic-analyzer {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-traffic-analyzer";
+  prefix ntta;
+
+  import ietf-interfaces {
+    prefix if;
+    reference
+      "RFC 8343: A YANG Data Model for Interface Management";
+  }
+  import ietf-yang-types {
+    prefix yang;
+    reference
+      "RFC 9911: Common YANG Data Types";
+  }
+  import ietf-netconf-acm {
+    prefix nacm;
+    reference
+      "RFC 8341: Network Configuration Access Control Model";
+  }
+
+  organization
+    "IETF Benchmarking Methodology Working Group";
+  contact
+    "WG Web:   <https://datatracker.ietf.org/group/bmwg/about/>
+     WG List:  BMWG <mailto:bmwg@ietf.org>
+
+     Author:   Vladimir Vassilev
+               <mailto:vladimir@lightside-instruments.com>";
+  description
+    "This module contains a collection of YANG definitions for
+     management of the traffic analyzer functionality part
+     of network interconnect testers.
+
+     Copyright (c) 2026 IETF Trust and the persons identified as
+     authors of the code.  All rights reserved.
+
+     Redistribution and use in source and binary forms, with or
+     without modification, is permitted pursuant to, and subject to
+     the license terms contained in, the Revised BSD License set
+     forth in Section 4.c of the IETF Trust's Legal Provisions
+     Relating to IETF Documents
+     (https://trustee.ietf.org/license-info).
+
+     All revisions of IETF and IANA published modules can be found
+     at the YANG Parameters registry group
+     (https://www.iana.org/assignments/yang-parameters).
+
+     This version of this YANG module is part of RFC XXXX; see
+     the RFC itself for full legal notices.";
+
+  revision 2026-06-23 {
+    description
+      "Initial revision.";
+    reference
+      "RFC XXXX: A YANG Data Model for
+                 Network Tester Management";
+  }
+
+  feature testframe-filter {
+    description
+      "Indicates that the device implements
+       a filter that can specify a subset of packets to be
+       analyzed as testframes.";
+  }
+
+  feature capture-filter {
+    description
+      "Indicates that the device implements
+       a filter that can specify a subset of packets to be
+       captured.";
+  }
+
+  feature idle-octets-counter {
+    description
+      "Indicates that the device implements
+       idle-octets counter that accumulates the time
+       the link is not utilized. The minimum required
+       idle gaps are not counted as idle octets.";
+  }
+
+  feature capture {
+    description
+      "Indicates that the device implements
+       packet capture functionality.";
+  }
+
+  identity testframe-type {
+    description
+      "Base identity for all test frame types.";
+  }
+
+  identity unspecified {
+    base testframe-type;
+    description
+      "The configuration of the testframe
+       type of the traffic analyzer is done outside of
+       the data model specified configuration interface.";
+  }
+
+  identity testframe-filter {
+    description
+      "Base testframe-filter identity.";
+  }
+
+  identity capture-filter {
+    description
+      "Base capture-filter identity.";
+  }
+
+  identity bit-field-match {
+    base ntta:testframe-filter;
+    description
+      "Bit field matching filter. Frames that do not have
+       equal values for all the bits of the specified data
+       at the offsets specified with bits set in the mask
+       are not processed as test frames.";
+  }
+
+  grouping statistics-data {
+    description
+      "Analyzed traffic statistics and test frame statistics.";
+    container statistics {
+      description
+        "A collection of interface-related statistics objects.
+         The counters in this container must be initialized
+         to zero when the traffic-analyzer container is created";
+      leaf pkts {
+        type yang:counter64;
+        description
+          "Total number of packets analyzed.";
+      }
+      leaf octets {
+        type yang:counter64;
+        description
+          "Total number of packet octets analyzed.";
+      }
+      leaf idle-octets {
+        if-feature "idle-octets-counter";
+        type yang:counter64;
+        description
+          "Total accumulated period with no frame transmission
+           taking place measured in octets at the current link
+           speed. This counter does not increment only when the
+           interface is operating at 100% of its capacity.
+
+           Octets not counted in '../octets' but not idle are,
+           for example, layer 1 framing octets - for Ethernet interfaces
+           7+1 preamble octets per packet as well as the 12-octets
+           minimum gap.";
+      }
+      leaf errors {
+        type yang:counter64;
+        description
+          "Count of packets with errors.
+           Not counted in the pkts or captured.
+           For example packets with CRC error.";
+      }
+    }
+    container testframe-statistics {
+      description
+        "Statistics for received testframes containing
+         either sequence number, payload checksum,
+         timestamp or any combination of these features.";
+      leaf pkts {
+        type yang:counter64;
+        description
+          "Total count of detected testframes.";
+      }
+      leaf sequence-errors {
+        type yang:counter64;
+        description
+          "Total count of testframes with
+           unexpected sequence number. After each sequence
+           error the expected next sequence number is
+           updated.";
+      }
+      leaf payload-errors {
+        type yang:counter64;
+        description
+          "Total count of testframes with
+           payload errors.";
+      }
+      container latency {
+        description
+          "Latency statistics.";
+        leaf samples {
+          type uint64;
+          description
+            "Total count of testframes used for estimating
+             the latency statistics. When every testframe is
+             used, samples='../pkts'.";
+        }
+        leaf min {
+          type uint64;
+          units "nanoseconds";
+          description
+            "Minimum measured latency.";
+        }
+        leaf max {
+          type uint64;
+          units "nanoseconds";
+          description
+            "Maximum measured latency.";
+        }
+        leaf average {
+          type uint64;
+          units "nanoseconds";
+          description
+            "The sum of all sampled latencies divided
+             by the number of samples.";
+        }
+        leaf latest {
+          type uint64;
+          units "nanoseconds";
+          description
+            "Latency of the latest sample.";
+        }
+      }
+      container last-sequence-error {
+        description
+          "Last sequence error state data.";
+        leaf timestamp {
+          type yang:date-and-time;
+          description
+            "Timestamp of the moment a testframe with
+             unexpected sequence number was received.";
+        }
+        leaf expected {
+          type uint64;
+          description
+            "Expected sequence number.";
+        }
+        leaf received {
+          type uint64;
+          description
+            "Received sequence number.";
+        }
+      }
+    }
+  }
+
+  grouping capture-statistics-data {
+    description
+      "Capture process statistics.";
+    container statistics {
+      description
+        "Statistics for captured frames.";
+      leaf pkts {
+        type yang:counter64;
+        description
+          "Total count of captured frames.";
+      }
+      leaf octets {
+        type yang:counter64;
+        description
+          "This counter is identical with the in-octets/out-octets
+           counters defined in RFC8343 except that it counts the
+           octets captured since the analyzer was created.";
+      }
+    }
+  }
+
+  grouping capture-config-data {
+    description
+      "Grouping with a capture configuration container.";
+    container capture {
+      if-feature "capture";
+      presence "Enables the capture functionality";
+      description
+        "Contains capture parameters.";
+      leaf max-frames-visible {
+        type uint64;
+        description
+          "Maximum number of frame entries available in
+           the state/capture/frames container.";
+      }
+      leaf max-frame-data-visible {
+        type uint32;
+        description
+          "Maximum length of data per frame available in
+           the state/capture/frames/frame/data.";
+      }
+      container start-trigger {
+        presence "Enables trigger condition that starts
+                  the capture process.";
+        description
+          "Specifies when the capture start is triggered.";
+        choice start-trigger {
+          mandatory true;
+          description
+            "Choice of start-trigger condition.";
+          case frame-index {
+            description
+              "Start capturing frames at the specified frame index.";
+            leaf frame-index {
+              type uint64;
+              description
+                "First captured frame index.";
+            }
+          }
+          case testframe-index {
+            description
+              "Start capturing frames at the specified
+               testframe index.";
+            leaf testframe-index {
+              type uint64;
+              description
+                "First captured testframe index.";
+            }
+          }
+        }
+      }
+      container stop-trigger {
+        presence "Enables trigger condition that stops
+                  the capture process.";
+        description
+          "Specifies when the capture is stopped.";
+        choice stop-trigger {
+          mandatory true;
+          description
+            "Choice of stop-trigger condition.";
+          case when-full {
+            description
+              "Stops capturing when the implementation can not store
+               more frames.";
+            leaf when-full {
+              type empty;
+              description
+                "When present in configuration capture stops when
+                 the capture buffer is full.";
+            }
+          }
+        }
+      }
+      container filter {
+        if-feature "capture-filter";
+        presence "When packets are filtered before captured
+                  according to the filter type";
+        description
+          "Contains the filtering rules for capturing only
+           a specific subset of the frames.";
+        leaf type {
+          type identityref {
+            base ntta:capture-filter;
+          }
+          mandatory true;
+          description
+            "Type of the applied filter. External modules can
+             define alternative filter type identities.";
+        }
+      }
+    }
+  }
+
+  grouping capture-data {
+    description
+      "Grouping with statistics and data of one or more
+       captured frames.";
+    container capture {
+      if-feature "capture";
+      description
+        "Capture statistics data and frames.";
+      uses capture-statistics-data;
+      container frames {
+        description
+          "Contains list of captured frames.";
+        list frame {
+          key "sequence-number";
+          description
+            "Statistics and data of a captured frame.";
+          leaf sequence-number {
+            type uint64;
+            description
+              "Incremental counter of frames captured.";
+          }
+          leaf timestamp {
+            type yang:date-and-time;
+            description
+              "Timestamp of the moment the frame was captured.";
+          }
+          leaf size {
+            type uint32;
+            description
+              "Frame length. Ideally the data captured will be
+               of the same length but can be shorter
+               depending on implementation limitations.";
+          }
+          leaf data {
+            type binary;
+            description
+              "Raw data of the captured frame.";
+            nacm:default-deny-all;
+          }
+        }
+      }
+    }
+  }
+
+  grouping testframe-config-data {
+    description
+      "Grouping with a testframe configuration container.";
+    container testframe {
+      description
+        "Generated traffic burst parameters.";
+      leaf type {
+        type identityref {
+          base ntta:testframe-type;
+        }
+        default "ntta:unspecified";
+        description
+          "The 'unspecified' default value enables the option
+           for configuration of the testframe type of the traffic
+           analyzer outside of the data model specified
+           configuration interface.";
+      }
+      container filter {
+        if-feature "testframe-filter";
+        presence "When present packets are
+                  filtered before analyzed according
+                  to the filter type";
+        description
+          "Contains the filtering rules for processing only
+           a specific subset of the frames as test frames.";
+        leaf type {
+          type identityref {
+            base ntta:testframe-filter;
+          }
+          mandatory true;
+          description
+            "Type of the applied filter. External modules can
+             define alternative filter type identities.";
+        }
+      }
+    }
+  }
+
+  augment "/if:interfaces/if:interface" {
+    description
+      "Traffic analyzer augmentations of ietf-interfaces.";
+    container traffic-analyzer {
+      presence "Enables the traffic analyzer.";
+      description
+        "Traffic analyzer top container.";
+      uses testframe-config-data;
+      uses capture-config-data;
+      container state {
+        config false;
+        description
+          "State data.";
+        uses statistics-data;
+        uses capture-data;
+      }
+    }
+  }
+
+  augment "/if:interfaces/if:interface/ntta:traffic-analyzer/"
+        + "ntta:testframe/ntta:filter" {
+    when "derived-from-or-self(ntta:type, 'ntta:bit-field-match')";
+    description
+      "Logical AND of masked bit fields.";
+    leaf mask {
+      type binary;
+      description
+        "Specifies bit field mask for comparison.
+         Non-masked bit fields are ignored.";
+    }
+    leaf data {
+      type binary;
+      description
+        "Specify data to be matched according to the specified mask.";
+    }
+    leaf offset {
+      type uint32;
+      mandatory true;
+      description
+        "Offset in the frame.";
+    }
+  }
+}
+]]></artwork>
+        </figure>
+
+<t>&lt;CODE ENDS></t>
+
+</section>
+
+    <section anchor="iana" title="IANA Considerations">
+      <t>This document registers two URIs and two YANG modules.</t>
+
+      <section title="URI Registration">
+<t>
+IANA is requested to register the following URI in the "ns"
+registry within the "IETF XML Registry" group <xref target="RFC3688"/>:
+<figure><artwork><![CDATA[
+   URI: urn:ietf:params:xml:ns:yang:ietf-traffic-generator
+   Registrant Contact:  The IESG
+   XML: N/A; the requested URI is an XML namespace.
+
+   URI: urn:ietf:params:xml:ns:yang:ietf-traffic-analyzer
+   Registrant Contact:  The IESG
+   XML: N/A; the requested URI is an XML namespace.
+]]></artwork></figure>
+</t>
+      </section>
+
+      <section title="YANG Module Name Registration">
+<t>
+IANA is requested to register the following YANG module in the "YANG
+Module Names" registry <xref target="RFC6020"/> within the "YANG Parameters"
+registry group.
+
+<figure><artwork><![CDATA[
+   Name: ietf-traffic-generator
+   Maintained by IANA?  N
+   Namespace: urn:ietf:params:xml:ns:yang:ietf-traffic-generator
+   Prefix: nttg
+   Reference: RFC XXXX
+
+
+   Name: ietf-traffic-analyzer
+   Maintained by IANA?  N
+   Namespace: urn:ietf:params:xml:ns:yang:ietf-traffic-analyzer
+   Prefix: ntta
+   Reference: RFC XXXX
+]]></artwork></figure>
+</t>
+      </section>
+    </section>
+<section title="Operational Considerations">
+<t>
+The configuration nodes defined in the ietf-traffic-generator module allow deterministic specification of traffic as a sequences of frames each followed by a gap. Unless 'realtime-epoch' leaf is present the interface starts generation upon the creation or any change of the configuration under '/if:interfaces/if:interface/nttg:traffic-generator'. Multiple traffic generators on different interfaces can be synchronized with the 'start-delay' leaf. Traffic generation continues until as many frames as specified by the 'total-frames' leaf when it is present are generated or until the traffic generator generator configuration under the 'traffic-generator' container is deleted causing the traffic generation to stop or changed causing the traffic generation to stop then restart.
+</t>
+<t>
+The presence of '/if:interfaces/if:interface/ntta:traffic-analyzer' container defined in the ietf-traffic-analyzer module enables the traffic analyzer functionality on an interface. The traffic analyzer continues its operation until the 'traffic-analyzer' container is deleted or changed causing the traffic analyzer to stop then restart discarding its state including statistics and captured frames.
+</t>
+</section>
+
+        <section anchor="Security" title="Security Considerations">
+<t>
+This section is modeled after the template described in Section 3.7.1
+of <xref target="RFC9907"/>.</t>
+<t>
+The YANG modules “ietf-traffic-generator” and “ietf-traffic-analyzer”
+define a data model that is
+designed to be accessed via YANG-based transactional management protocols,
+such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/>. These YANG-based management protocols
+(1) have to use a secure transport layer (e.g., Secure Shell (SSH)
+<xref target="RFC4252"/>, TLS <xref target="RFC8446"/>, and QUIC <xref target="RFC9000"/>) and (2) have to use
+mutual authentication.</t>
+<t>
+The Network Configuration Access Control Model (NACM) <xref target="RFC8341"/>
+provides the means to restrict access for particular NETCONF users to a preconfigured subset of all available NETCONF protocol operations and content.
+</t>
+            <section title="ietf-traffic-generator.yang">
+            <t>
+There are a number of data nodes defined in this YANG module that are
+writable/creatable/deletable (i.e., "config true", which is the
+default).  All writable data nodes are likely to be sensitive or
+vulnerable in some network environments.  Write
+operations (e.g., edit-config) and delete operations to these data
+nodes without proper protection or authentication can have a negative
+effect on network operations.  The following subtrees and data nodes
+have particular sensitivities/vulnerabilities:
+                    <list style="symbols">
+                        <t>/if:interfaces/if:interface/nttg:traffic-generator: This can be used for malicious purposes like generating network traffic part of a Denial-of-Service (DoS) attack.</t>
+                    </list>
+            </t>
+            </section>
+            <section title="ietf-traffic-analyzer.yang">
+                <t>
+Some of the readable data nodes in this YANG module may be considered
+sensitive or vulnerable in some network environments.  It is thus
+important to control read access (e.g., via get, get-config, or
+notification) to these data nodes.  Specifically, the following
+subtrees and data nodes have particular sensitivities/
+vulnerabilities:
+
+                    <list style="symbols">
+                        <t>/if:interfaces/if:interface/ntta:traffic-analyzer/ntta:capture/ntta:frames/ntta:frame/ntta:data: is designed for use in testing and verification but can be used
+      for reading information contained in packets sent and received on any
+      of the interfaces on systems that implement the capture feature
+      and, thus, disclose sensitive data.
+</t>
+                    </list>
+               </t>
+            </section>
+        </section>
+</middle>
+
+<back>
+
+    <references title="Normative References">
+      <?rfc include='reference.RFC.2544'?>
+      <?rfc include='reference.RFC.3688'?>
+      <?rfc include='reference.RFC.6020'?>
+      <?rfc include='reference.RFC.8341'?>
+      <?rfc include='reference.RFC.9911'?>
+      <?rfc include='reference.RFC.7950'?>
+      <?rfc include='reference.RFC.8343'?>
+    </references>
+    <references title="Informative References">
+      <?rfc include='reference.RFC.4252'?>
+      <?rfc include='reference.RFC.6241'?>
+      <?rfc include='reference.RFC.8340'?>
+      <?rfc include='reference.RFC.8446'?>
+      <?rfc include='reference.RFC.9000'?>
+      <?rfc include='reference.RFC.9907'?>
+
+            <reference anchor="IEEE802.3-2014" target="">
+        <front>
+          <title>IEEE 802.3-2014</title>
+
+          <author initials="" surname="" fullname="">
+            <organization>IEEE WG802.3 - Ethernet Working Group</organization>
+          </author>
+
+          <date year="2014" />
+        </front>
+            </reference>
+            <reference anchor="IEEE1588" target="">
+        <front>
+          <title>IEEE 1588-2008</title>
+
+          <author initials="" surname="" fullname="">
+            <organization>IEEE</organization>
+          </author>
+
+          <date year="2008" />
+        </front>
+            </reference>
+    </references>
+
+<section title="Examples" anchor="examples">
+    <t>
+    The topology depicted in Figure 3 is used for the examples in this appendix:
+        <figure>
+            <name>Test setup where TG and TA modules are on distinct entities that are not colocated</name>
+            <artwork><![CDATA[
+    +-------------+           +------------+           +------------+
+    |             | eth0 eth0 |            | eth1 eth0 |            |
+    | tester0   TG|>--------->|    dut0    |>--------->|TA  tester1 |
+    |             |           |            |           |            |
+    +-------------+           +------------+           +------------+
+
+            ]]></artwork>
+        </figure>
+    </t>
+<section title="Basic Test Program">
+    <t>
+This pseudo code program orchestrates a network test and shows how the model can be used:
+      <figure>
+        <artwork><![CDATA[
+# Connect to network
+net=connect("topology.xml")
+
+# Configure DUTs and enable traffic-analyzers
+net.node("dut0").edit( \
+  "create /interfaces/interface[name='eth0'] -- type=ethernetCsmacd")
+net.node("dut0").edit(
+  "create /interfaces/interface[name='eth1'] -- type=ethernetCsmacd")
+net.node("dut0").edit(
+  "create /flows/flow[id='t0'] -- match/in-port=eth0 "
+  "actions/action[order='0']/output-action/out-port=eth1")
+
+net.node("tester1").edit(
+  "create /interfaces/interface[name='eth0']/traffic-analyzer")
+net.commit()
+
+# Get network state - before
+before=net.get()
+
+# Start traffic
+net.node("tester0).edit(
+  "create /interfaces/interface[name='eth0']/traffic-generator -- "
+  "frame-size=64 gap=20")
+
+net.commit()
+
+time.sleep(60)
+
+# Stop traffic
+net.node("tester1").edit("delete /interfaces/interface[name='eth0']/"
+                         "traffic-generator")
+net.commit()
+
+# Get network state - after
+after=net.get()
+
+# Report
+sent_pkts=delta("tester0",before,after,
+  "/interfaces/interface[name='eth0']/statistics/out-unicast-pkts")
+
+received_pkts=delta("tester1",before,after,
+  "/interfaces/interface[name='eth0']/statistics/in-unicast-pkts")
+
+analyzed_pkts=absolute("tester1",after,
+  "/interfaces/interface[name='eth0']/traffic-analyzer/
+  "statistics/pkts")
+
+latency_max=absolute(after,
+  "/interfaces/interface[name='eth0']/traffic-analyzer/state/"
+  "testframe-stats/latency/max")
+
+# Cleanup
+net.node("tester1").edit(
+   "delete /interfaces/interface/traffic-analyzer")
+net.node("dut0").edit("delete /flows")
+net.node("dut0").edit("delete /interfaces")
+net.commit()
+]]></artwork>
+        </figure>
+    </t>
+</section>
+<section title="Generating RFC2544 Test Frames">
+    <t>
+Appendix C.2.6.4 of  <xref target="RFC2544"/> specifies a detailed format. The 'frame-data' leaf provides an operator with full control over the generated frames payload.
+Notice that the encoding used to specify the value of the 'frame-data' leaf in this pseudocode example is not the encoding NETCONF would use on the wire which is Base64 but instead it is specified with human-readable format identical to the 'hex-string' type defined in <xref target="RFC9911"/>.
+      <figure>
+        <artwork><![CDATA[
+...
+net.node("tester1").edit(
+  "merge /interfaces/interface[name='eth0']/"
+  "traffic-generator -- frame-data="
+  "6c:a9:6f:00:00:02:6c:a9:6f:00:00:01:08:00:45:00:"
+  "00:2e:d4:a5:00:00:0a:11:58:16:c0:00:02:01:C0:00:"
+  "02:02:c0:20:00:07:00:1a:00:00:01:02:03:04:05:06:"
+  "07:08:09:0a:0b:0c:0d:0e:0f:10:11:12")
+...
+            ]]></artwork>
+        </figure>
+The resulting configuration serialized as XML is shown below in Appendix A.4
+    </t>
+</section>
+<section title="Generating Frames with Dynamic Data Fields">
+    <t>
+Adding a modifier functionality to the single stream traffic generator configuration.
+In this example, the highest 16 bits of the source MAC address
+of the generated Ethernet frame will be incremented.
+      <figure>
+        <artwork><![CDATA[
+...
+net.node("tester1").edit(
+  "merge /interfaces/interface[name='eth0']/"
+  "traffic-generator/modifiers/modifier[id='0'] -- "
+  "offset=6 mask=ff:ff action=increment repetitions=1")
+...
+            ]]></artwork>
+        </figure>
+    </t>
+</section>
+<section title="Example: NETCONF &lt;get&#8209;config&gt; Reply" anchor="example-netconf-get-config-reply">
+    <t>
+This section gives an example of a reply to the NETCONF &lt;get&#8209;config&gt;
+request for &lt;running&gt; for a device that implements the ietf-traffic-generator module and its configuration was modified according to the examples above.
+    </t>
+        <figure>
+            <artwork><![CDATA[
+<rpc-reply
+    xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"
+    message-id="101">
+  <data>
+    <interfaces
+        xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces"
+        xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type"
+        xmlns:nttg="urn:ietf:params:xml:ns:yang:ietf-traffic-generator">
+      <interface>
+        <name>eth0</name>
+        <type>ianaift:ethernetCsmacd</type>
+        <nttg:traffic-generator>
+          <frame-size>64</frame-size>
+          <frame-data>
+              bKlvAAACbKlvAAABCABFAAAu1KUAAAoRWBbAAAIB
+              wAACAsAgAAcAGgAAAQIDBAUGBwgJCgsMDQ4PEBES
+          </frame-data>
+          <gap>20</gap>
+        </nttg:traffic-generator>
+      </interface>
+    </interfaces>
+  </data>
+</rpc-reply>
+            ]]></artwork>
+        </figure>
+</section>
+
+</section>
+</back></rfc>
