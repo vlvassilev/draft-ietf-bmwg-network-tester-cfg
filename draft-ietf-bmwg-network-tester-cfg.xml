@@ -1246,7 +1246,6 @@ vulnerabilities:
 <back>
 
     <references title="Normative References">
-      <?rfc include='reference.RFC.2544'?>
       <?rfc include='reference.RFC.3688'?>
       <?rfc include='reference.RFC.6020'?>
       <?rfc include='reference.RFC.8341'?>
@@ -1255,6 +1254,7 @@ vulnerabilities:
       <?rfc include='reference.RFC.8343'?>
     </references>
     <references title="Informative References">
+      <?rfc include='reference.RFC.2544'?>
       <?rfc include='reference.RFC.4252'?>
       <?rfc include='reference.RFC.6241'?>
       <?rfc include='reference.RFC.8040'?>
