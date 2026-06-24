@@ -141,9 +141,18 @@ the remaining available space in the frame.
     </t>
 </section>
 <section title="Interface Specific Implementations">
-<section title="Ethernet Interfaces of Type: ethernetCSmacd">
+  <t>
+While the data model is designed to be independent of the underlying interface type its implementation requires interface specific document. That document has to document the mapping of the 'frame-data' octets to the interface specific frame fields. It has to determine which octets are lower protocol level framing octets considered part of the gaps and document any constraints such as minimum gap, minimum and maximum 'frame-size'.
+  </t>
+<section title="Ethernet Interfaces of Type ianaift:ethernetCsmacd">
+  <t>
+The mapping and constraints specification for Ethernet interfaces with /if:interfaces/if:interface/if:type identity equal to ianaift:ethernetCsmacd is part of the module description statemens.
+  </t>
 </section>
 <section title="Other Interfaces">
+  <t>
+For other interface types such specifications should be provided so that the data model can be implemented and used by operators.
+  </t>
 </section>
 </section>
 
