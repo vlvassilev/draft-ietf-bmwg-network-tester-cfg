@@ -30,7 +30,7 @@ This document specifies a YANG data model for use in network interconnect testin
 <section title="Introduction">
     <t>
 There is a need for a standard mechanism for specification
-of the transactions part of network tests and their implementation
+of the transactions part of network tests targeting frame-based octet-aligned network interconnect devices and their implementation
 over standardized network management protocols.
 Such a mechanism should allow the control and monitoring of the data plane traffic in a transactional manner.
 
@@ -140,6 +140,13 @@ specification. In addition a dynamic payload can fill
 the remaining available space in the frame.
     </t>
 </section>
+<section title="Interface Specific Implementations">
+<section title="Ethernet Interfaces of Type: ethernetCSmacd">
+</section>
+<section title="Other Interfaces">
+</section>
+</section>
+
 <section title="Using the Network Interconnect Tester Data Model">
 <t>
   A basic example of how the data model can be used in transactional network test program to control the testers part of a network and report counter statistics and timing measurement data is presented in <xref target="examples"/>.
