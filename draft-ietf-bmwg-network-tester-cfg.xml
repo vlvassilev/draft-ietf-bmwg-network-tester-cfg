@@ -9,7 +9,7 @@
 <?rfc iprnotified="no"?>
 <?rfc strict="yes"?>
 <rfc ipr="trust200902"   category="std"
-     docName="draft-ietf-bmwg-network-tester-cfg-13" >
+     docName="draft-ietf-bmwg-network-tester-cfg-14" >
     <front>
     <title abbrev="NETWORK-TESTER-MANAGEMENT-13">A YANG Data Model for Network Tester Management</title>
     <author initials="V" surname="Vassilev" fullname='Vladimir Vassilev' >
@@ -284,7 +284,7 @@ module: ietf-traffic-analyzer
 This module imports modules defined in <xref target="RFC8343"/> and <xref target="RFC9911"/>.
 The module also references <xref target="IEEE802.3-2014"/> as part of the description statements containing Ethernet interface specific implementation details.
 </t>
-<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-06-23.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-generator@2026-06-24.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-generator {
@@ -333,7 +333,7 @@ module ietf-traffic-generator {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-06-23 {
+  revision 2026-06-24 {
     description
       "Initial revision.";
     reference
@@ -647,7 +647,7 @@ module ietf-traffic-generator {
 <t>
 This module imports modules defined in <xref target="RFC8341"/>, <xref target="RFC8343"/>, and <xref target="RFC9911"/>.
 </t>
-<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-23.yang"</t>
+<t>&lt;CODE BEGINS> file "ietf-traffic-analyzer@2026-06-24.yang"</t>
         <figure>
             <artwork><![CDATA[
 module ietf-traffic-analyzer {
@@ -701,7 +701,7 @@ module ietf-traffic-analyzer {
      This version of this YANG module is part of RFC XXXX; see
      the RFC itself for full legal notices.";
 
-  revision 2026-06-23 {
+  revision 2026-06-24 {
     description
       "Initial revision.";
     reference
