@@ -1168,6 +1168,9 @@ registry group.
 The configuration nodes defined in the ietf-traffic-generator module allow deterministic specification of traffic as a sequences of frames each followed by a gap. Unless 'realtime-epoch' leaf is present the interface starts generation upon the creation or any change of the configuration under '/if:interfaces/if:interface/nttg:traffic-generator'. Multiple traffic generators on different interfaces can be synchronized with the 'start-delay' leaf. Traffic generation continues until as many frames as specified by the 'total-frames' leaf when it is present are generated or until the traffic generator generator configuration under the 'traffic-generator' container is deleted causing the traffic generation to stop or changed causing the traffic generation to stop then restart.
 </t>
 <t>
+The data model design requires transactional network management protocol that can replace one configuration with another in atomic operation. This is why NETCONF <xref target="RFC6241"/> is suitable and RESTCONF <xref target="RFC8040"/> is not without special mechanisms designed to emulate transactional protocol behavior.
+</t>
+<t>
 The presence of '/if:interfaces/if:interface/ntta:traffic-analyzer' container defined in the ietf-traffic-analyzer module enables the traffic analyzer functionality on an interface. The traffic analyzer continues its operation until the 'traffic-analyzer' container is deleted or changed causing the traffic analyzer to stop then restart discarding its state including statistics and captured frames.
 </t>
 </section>
@@ -1238,6 +1241,7 @@ vulnerabilities:
     <references title="Informative References">
       <?rfc include='reference.RFC.4252'?>
       <?rfc include='reference.RFC.6241'?>
+      <?rfc include='reference.RFC.8040'?>
       <?rfc include='reference.RFC.8340'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.9000'?>
