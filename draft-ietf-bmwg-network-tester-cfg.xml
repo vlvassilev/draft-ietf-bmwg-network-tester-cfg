@@ -36,6 +36,9 @@ Such a mechanism should allow the control and monitoring of the data plane traff
 
 This document defines a YANG <xref target="RFC7950"/> data model which is composed of two YANG modules for test traffic generator and analyzer functions.
     </t>
+    <t>
+   These modules are intended for use for managing network interconnect testing setups in a laboratory-isolated environment.
+    </t>         
 <section anchor="problem" title="Problem Statement">
     <t>
 Network interconnect tests require active network
@@ -146,7 +149,7 @@ While the data model is designed to be independent of the underlying interface t
   </t>
 <section title="Ethernet Interfaces of Type ianaift:ethernetCsmacd">
   <t>
-The mapping and constraints specification for Ethernet interfaces with /if:interfaces/if:interface/if:type identity equal to ianaift:ethernetCsmacd is part of the module description statemens.
+The mapping and constraints specification for Ethernet interfaces with /if:interfaces/if:interface/if:type identity equal to ianaift:ethernetCsmacd is part of the module description statements.
   </t>
 </section>
 <section title="Other Interfaces">
@@ -315,6 +318,9 @@ module ietf-traffic-generator {
     "This module contains a collection of YANG definitions for
      management of the traffic generator functionality part
      of network interconnect testers.
+
+     The module is intended for use in a laboratory-isolated
+     environment.
 
      Copyright (c) 2026 IETF Trust and the persons identified as
      authors of the code.  All rights reserved.
@@ -683,6 +689,9 @@ module ietf-traffic-analyzer {
     "This module contains a collection of YANG definitions for
      management of the traffic analyzer functionality part
      of network interconnect testers.
+
+     The module is intended for use in a laboratory-isolated
+     environment.
 
      Copyright (c) 2026 IETF Trust and the persons identified as
      authors of the code.  All rights reserved.
@@ -1181,7 +1190,7 @@ registry group.
     </section>
 <section title="Operational Considerations">
 <t>
-The configuration nodes defined in the ietf-traffic-generator module allow deterministic specification of traffic as a sequences of frames each followed by a gap. Unless 'realtime-epoch' leaf is present the interface starts generation upon the creation or any change of the configuration under '/if:interfaces/if:interface/nttg:traffic-generator'. Multiple traffic generators on different interfaces can be synchronized with the 'start-delay' leaf. Traffic generation continues until as many frames as specified by the 'total-frames' leaf when it is present are generated or until the traffic generator generator configuration under the 'traffic-generator' container is deleted causing the traffic generation to stop or changed causing the traffic generation to stop then restart.
+The configuration nodes defined in the "ietf-traffic-generator" YANG module allow deterministic specification of traffic as a sequences of frames each followed by a gap. Unless 'realtime-epoch' leaf is present the interface starts generation upon the creation or any change of the configuration under '/if:interfaces/if:interface/nttg:traffic-generator'. Multiple traffic generators on different interfaces can be synchronized with the 'start-delay' leaf. Traffic generation continues until as many frames as specified by the 'total-frames' leaf when it is present are generated or until the traffic generator generator configuration under the 'traffic-generator' container is deleted causing the traffic generation to stop or changed causing the traffic generation to stop then restart.
 </t>
 <t>
 The data model design requires transactional network management protocol that can replace one configuration with another in atomic operation. This is why NETCONF <xref target="RFC6241"/> is suitable and RESTCONF <xref target="RFC8040"/> is not without special mechanisms designed to emulate transactional protocol behavior.
@@ -1196,7 +1205,7 @@ The presence of '/if:interfaces/if:interface/ntta:traffic-analyzer' container de
 This section is modeled after the template described in Section 3.7.1
 of <xref target="RFC9907"/>.</t>
 <t>
-The YANG modules “ietf-traffic-generator” and “ietf-traffic-analyzer”
+The YANG modules "ietf-traffic-generator" and "ietf-traffic-analyzer"
 define a data model that is
 designed to be accessed via YANG-based transactional management protocols,
 such as the Network Configuration Protocol (NETCONF) <xref target="RFC6241"/>. These YANG-based management protocols
